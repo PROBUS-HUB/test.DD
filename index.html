@@ -223,6 +223,44 @@ textarea.form-input { resize:none; line-height:1.6; }
 /* PWAヒント */
 .pwa-hint { background:#fff; border-radius:12px; border:1px solid #e8e8e6; padding:12px 14px; margin-bottom:12px; font-size:12px; color:#888; line-height:1.6; }
 .pwa-hint strong { color:#1a1a1a; }
+
+/* ===== モバイル最適化 ===== */
+@media (max-width: 360px) {
+  .stats { grid-template-columns: repeat(5,1fr); gap:2px; }
+  .stat-card { padding:8px 2px; }
+  .stat-num { font-size:14px; }
+  .stat-label { font-size:9px; }
+  .tabs { grid-template-columns: repeat(3,1fr); gap:3px; }
+  .tab-btn { font-size:10px; padding:8px 2px; }
+  .wrap { padding:10px; }
+}
+
+/* GitHub Pages / iframe 埋め込み対応 */
+html, body { -webkit-overflow-scrolling: touch; overflow-x: hidden; }
+input, button, textarea, select {
+  font-size: 16px !important; /* iOS自動ズーム防止 */
+  -webkit-appearance: none;
+  border-radius: 10px;
+}
+input[type="number"], input[type="tel"], input[type="date"],
+input[type="datetime-local"], input[type="search"] {
+  font-size: 16px !important;
+}
+.btn-primary, .btn-green, .btn-orange, .btn-map-full,
+.btn-map, .btn-edit, .btn-del, .status-btn, .tab-btn,
+.month-nav, .wd-btn, .map-filter-btn, .btn-zip-search,
+.btn-search-clear, .map-pin-open, .status-badge {
+  -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+  touch-action: manipulation;
+  cursor: pointer;
+}
+/* ダウンロードリンク（モバイルで長押し保存しやすく） */
+#csv-dl-link {
+  display: block;
+  padding: 14px 16px;
+  font-size: 15px;
+  word-break: break-all;
+}
 </style>
 </head>
 <body>
@@ -1054,7 +1092,7 @@ function exportCSV(type) {
 
   if (type === 'visits') {
     filename = `訪問予定_${stamp}.csv`;
-    rows.push(['id','customId','zipcode','datetime','name','address','tel','memo','reward','status']);
+    rows.push(['管理ID','カスタムID','郵便番号','訪問日時','お客様名','住所','電話番号','メモ','報酬金額','ステータス(0=未訪問/1=訪問済)']);
     visits.forEach(v => rows.push([
       v.id||'', v.customId||'', v.zipcode||'', v.datetime||'',
       v.name||'', v.address||'', v.tel||'', v.memo||'',
@@ -1062,13 +1100,13 @@ function exportCSV(type) {
     ]));
   } else if (type === 'rewards') {
     filename = `報酬データ_${stamp}.csv`;
-    rows.push(['id','date','name','amount','status','memo']);
+    rows.push(['管理ID','報酬発生日','お客様名・件名','報酬金額','ステータス(0=未確定/1=確定済)','メモ']);
     rewards.forEach(r => rows.push([
       r.id||'', r.date||'', r.name||'', r.amount||'', r.status!=null?r.status:1, r.memo||''
     ]));
   } else if (type === 'advances') {
     filename = `前払い請求_${stamp}.csv`;
-    rows.push(['id','date','amount','memo']);
+    rows.push(['管理ID','請求日','請求金額','メモ']);
     advances.forEach(a => rows.push([
       a.id||'', a.date||'', a.amount||'', a.memo||''
     ]));
@@ -1143,14 +1181,34 @@ function importCSV(input) {
       const dataRows = lines.slice(1).map(l => parseCSVLine(l));
 
       let type = '';
-      if (header.includes('datetime') && header.includes('address')) type = 'visits';
-      else if (header.includes('amount') && header.includes('status') && header.includes('date') && !header.includes('datetime')) type = 'rewards';
-      else if (header.includes('amount') && header.includes('date') && !header.includes('status')) type = 'advances';
+      // 日本語ヘッダー・英語ヘッダー両対応
+      const isVisits   = header.includes('訪問日時') || (header.includes('datetime') && header.includes('address'));
+      const isRewards  = header.includes('報酬発生日') || (header.includes('amount') && header.includes('status') && header.includes('date') && !header.includes('datetime'));
+      const isAdvances = header.includes('請求日') || (header.includes('amount') && header.includes('date') && !header.includes('status') && !header.includes('datetime'));
+      if (isVisits) type = 'visits';
+      else if (isRewards) type = 'rewards';
+      else if (isAdvances) type = 'advances';
 
       if (!type) { statusEl.style.color='#c0392b'; statusEl.textContent='対応していないCSV形式です'; return; }
 
+      // 日本語→英語キーのマッピング
+      const colMap = {
+        '管理ID':'id', 'カスタムID':'customId', '郵便番号':'zipcode',
+        '訪問日時':'datetime', 'お客様名':'name', '住所':'address',
+        '電話番号':'tel', 'メモ':'memo', '報酬金額':'reward',
+        'ステータス(0=未訪問/1=訪問済)':'status',
+        '報酬発生日':'date', 'お客様名・件名':'name',
+        'ステータス(0=未確定/1=確定済)':'status',
+        '請求日':'date', '請求金額':'amount',
+        // 英語キーはそのまま
+        'id':'id','customId':'customId','zipcode':'zipcode','datetime':'datetime',
+        'name':'name','address':'address','tel':'tel','memo':'memo',
+        'reward':'reward','status':'status','date':'date','amount':'amount'
+      };
+      const normalizedHeader = header.map(h => colMap[h.trim()] || h.trim());
+
       const getVal = (row, col) => {
-        const idx = header.indexOf(col);
+        const idx = normalizedHeader.indexOf(col);
         return idx >= 0 ? (row[idx] || '') : '';
       };
 
