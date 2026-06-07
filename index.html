@@ -1127,23 +1127,82 @@ function exportCSV(type) {
   const bom = '\uFEFF';
   const csvContent = bom + csvStr;
 
-  // data URI をダウンロードリンクとして設定し、ユーザーにタップさせる
-  const encoded = encodeURIComponent(csvContent);
-  const dataUri = 'data:text/csv;charset=utf-8,' + encoded;
-
   // 既存リンクがあれば削除
   const existing = document.getElementById('csv-dl-link');
   if (existing) existing.remove();
-
   const wrap = document.getElementById('csv-dl-wrap');
-  const a = document.createElement('a');
-  a.id = 'csv-dl-link';
-  a.href = dataUri;
-  a.download = filename;
-  a.textContent = '⬇️ ' + filename + ' をダウンロード';
-  a.style.cssText = 'display:block;margin-top:12px;padding:12px 16px;background:#e8f5e9;border:1px solid #a5d6a7;border-radius:10px;color:#27ae60;font-size:14px;font-weight:600;text-align:center;text-decoration:none;';
-  wrap.appendChild(a);
-  wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  if (isIOS) {
+    // iPhone Safari は data: URI の download 属性を無視するため
+    // Blob URL を新規タブで開いてもらい、共有→ファイルに保存 の流れで対応
+    try {
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.id = 'csv-dl-link';
+      a.href = url;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.textContent = '📄 ' + filename + '（タップして開く）';
+      a.style.cssText = 'display:block;margin-top:12px;padding:14px 16px;background:#e8f5e9;border:1px solid #a5d6a7;border-radius:10px;color:#27ae60;font-size:14px;font-weight:600;text-align:center;text-decoration:none;';
+      wrap.appendChild(a);
+
+      const hint = document.createElement('p');
+      hint.style.cssText = 'font-size:12px;color:#888;margin-top:8px;line-height:1.7;';
+      hint.innerHTML = '① 上のリンクをタップして開く<br>② 画面下部の 共有ボタン（□↑）をタップ<br>③「ファイルに保存」または「メモに追加」を選択';
+      wrap.appendChild(hint);
+
+      wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } catch(e) {
+      // Blob も使えない場合はテキストをそのまま表示
+      const pre = document.createElement('textarea');
+      pre.value = csvContent;
+      pre.style.cssText = 'width:100%;height:180px;font-size:11px;margin-top:10px;border-radius:8px;border:1px solid #ddd;padding:8px;';
+      pre.readOnly = true;
+      wrap.appendChild(pre);
+      const hint = document.createElement('p');
+      hint.style.cssText = 'font-size:12px;color:#888;margin-top:6px;';
+      hint.textContent = '上のテキストを全選択してコピーし、メモ帳などに貼り付けて .csv として保存してください。';
+      wrap.appendChild(hint);
+      wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  } else {
+    // Android・PC は Blob ダウンロード
+    try {
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.id = 'csv-dl-link';
+      a.href = url;
+      a.download = filename;
+      a.textContent = '⬇️ ' + filename + ' をダウンロード';
+      a.style.cssText = 'display:block;margin-top:12px;padding:14px 16px;background:#e8f5e9;border:1px solid #a5d6a7;border-radius:10px;color:#27ae60;font-size:14px;font-weight:600;text-align:center;text-decoration:none;';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+      // リンクも表示しておく（念のため）
+      const a2 = document.createElement('a');
+      a2.id = 'csv-dl-link';
+      a2.href = url;
+      a2.download = filename;
+      a2.textContent = '⬇️ ' + filename + ' をダウンロード';
+      a2.style.cssText = 'display:block;margin-top:12px;padding:14px 16px;background:#e8f5e9;border:1px solid #a5d6a7;border-radius:10px;color:#27ae60;font-size:14px;font-weight:600;text-align:center;text-decoration:none;';
+      wrap.appendChild(a2);
+    } catch(e) {
+      const encoded = encodeURIComponent(csvContent);
+      const a = document.createElement('a');
+      a.id = 'csv-dl-link';
+      a.href = 'data:text/csv;charset=utf-8,' + encoded;
+      a.download = filename;
+      a.textContent = '⬇️ ' + filename + ' をダウンロード';
+      a.style.cssText = 'display:block;margin-top:12px;padding:14px 16px;background:#e8f5e9;border:1px solid #a5d6a7;border-radius:10px;color:#27ae60;font-size:14px;font-weight:600;text-align:center;text-decoration:none;';
+      wrap.appendChild(a);
+    }
+    wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
 }
 
 // ===== CSV インポート トリガー =====
