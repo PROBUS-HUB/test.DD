@@ -546,16 +546,21 @@ input[type="datetime-local"], input[type="search"] {
       <p id="csv-import-status" style="font-size:12px;margin-top:8px;min-height:16px;"></p>
     </div>
 
-    <!-- データ確認テーブル -->
+    <!-- 総合ダッシュボード -->
     <div class="card">
-      <p class="card-label">データ確認（テーブル表示）</p>
-      <p style="font-size:12px;color:#aaa;margin-bottom:10px;">登録済みの全データを一覧で確認できます</p>
-      <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
-        <button onclick="showDataTable('visits')"   style="flex:1;padding:9px 4px;font-size:12px;font-weight:600;background:#2980b9;color:#fff;border:none;border-radius:8px;cursor:pointer;">📋 訪問予定</button>
-        <button onclick="showDataTable('rewards')"  style="flex:1;padding:9px 4px;font-size:12px;font-weight:600;background:#27ae60;color:#fff;border:none;border-radius:8px;cursor:pointer;">💰 報酬</button>
-        <button onclick="showDataTable('advances')" style="flex:1;padding:9px 4px;font-size:12px;font-weight:600;background:#e67e22;color:#fff;border:none;border-radius:8px;cursor:pointer;">💸 前払い</button>
+      <p class="card-label">総合データ一覧</p>
+      <p style="font-size:12px;color:#aaa;margin-bottom:10px;">月別サマリーと全データの明細をまとめて確認できます</p>
+
+      <!-- 月選択 -->
+      <div style="display:flex;align-items:center;justify-content:space-between;background:#f5f5f3;border-radius:10px;padding:8px 12px;margin-bottom:10px;">
+        <button onclick="dashChangeMonth(-1)" style="background:none;border:none;font-size:20px;cursor:pointer;color:#1a1a1a;padding:2px 8px;">‹</button>
+        <span id="dash-month-label" style="font-size:14px;font-weight:700;"></span>
+        <button onclick="dashChangeMonth(1)"  style="background:none;border:none;font-size:20px;cursor:pointer;color:#1a1a1a;padding:2px 8px;">›</button>
       </div>
-      <div id="data-table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;"></div>
+
+      <button onclick="renderDashboard()" style="width:100%;padding:10px;font-size:14px;font-weight:600;background:#1a1a1a;color:#fff;border:none;border-radius:10px;cursor:pointer;margin-bottom:12px;">🔄 表示する</button>
+
+      <div id="dashboard-wrap"></div>
     </div>
 
     <!-- JSONバックアップ -->
@@ -735,6 +740,12 @@ function changeMonth(delta) {
   const d = new Date(y, m-1+delta, 1);
   currentMonth = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
   updateMonthLabel();
+  // ダッシュボード月ラベル初期化
+  const dashLabelEl = document.getElementById('dash-month-label');
+  if (dashLabelEl) {
+    const [dy,dm] = dashMonth.split('-');
+    dashLabelEl.textContent = dy + '年 ' + parseInt(dm) + '月';
+  }
   renderList();
   updateStats();
 }
@@ -1107,70 +1118,150 @@ function clearAllData() {
   saveData(); closeSettings();
 }
 
-// ===== データ確認テーブル =====
-function showDataTable(type) {
-  const wrap = document.getElementById('data-table-wrap');
-  wrap.innerHTML = '';
-  let headers = [], rows = [], title = '';
-  if (type === 'visits') {
-    title = '訪問予定 ' + visits.length + '件';
-    headers = ['日時','お客様名','住所','ステータス','報酬'];
-    rows = visits.map(v => [
-      formatDT(v.datetime),
-      (v.customId ? '['+v.customId+'] ' : '') + (v.name||''),
-      v.address||'—', v.status===1 ? '✓訪問済' : '未訪問',
-      v.reward!=null ? fmtYen(v.reward) : '—'
-    ]);
-  } else if (type === 'rewards') {
-    title = '報酬 ' + rewards.length + '件';
-    headers = ['日付','件名','金額','状態','メモ'];
-    rows = rewards.map(r => [
-      r.date||'—', r.name||'—', fmtYen(r.amount),
-      r.status===1 ? '✓確定済' : '未確定', r.memo||'—'
-    ]);
-  } else if (type === 'advances') {
-    title = '前払い請求 ' + advances.length + '件';
-    headers = ['日付','金額','メモ'];
-    rows = advances.map(a => [a.date||'—', fmtYen(a.amount), a.memo||'—']);
-  }
+// ===== 総合ダッシュボード =====
+let dashMonth = (() => {
+  const n = new Date();
+  return n.getFullYear() + '-' + String(n.getMonth()+1).padStart(2,'0');
+})();
+
+function dashChangeMonth(delta) {
+  const [y,m] = dashMonth.split('-').map(Number);
+  const d = new Date(y, m-1+delta, 1);
+  dashMonth = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+  const [y2,m2] = dashMonth.split('-');
+  document.getElementById('dash-month-label').textContent = y2 + '年 ' + parseInt(m2) + '月';
+}
+
+function makeTbl(headers, rows, emptyMsg) {
   if (rows.length === 0) {
-    wrap.innerHTML = '<p style="font-size:13px;color:#aaa;padding:12px 0;">データがありません</p>';
-    return;
+    const p = document.createElement('p');
+    p.style.cssText = 'font-size:12px;color:#aaa;padding:8px 0;';
+    p.textContent = emptyMsg || 'データがありません';
+    return p;
   }
-  const titleEl = document.createElement('p');
-  titleEl.style.cssText = 'font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:8px;';
-  titleEl.textContent = title;
-  wrap.appendChild(titleEl);
-  const table = document.createElement('table');
-  table.style.cssText = 'width:100%;border-collapse:collapse;font-size:12px;min-width:360px;';
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:4px;';
+  const tbl = document.createElement('table');
+  tbl.style.cssText = 'width:100%;border-collapse:collapse;font-size:11px;min-width:320px;';
   const thead = document.createElement('thead');
   const trh = document.createElement('tr');
   headers.forEach(h => {
     const th = document.createElement('th');
     th.textContent = h;
-    th.style.cssText = 'background:#1a1a1a;color:#fff;padding:8px 10px;text-align:left;white-space:nowrap;font-weight:600;';
+    th.style.cssText = 'background:#333;color:#fff;padding:7px 8px;text-align:left;white-space:nowrap;font-weight:600;';
     trh.appendChild(th);
   });
-  thead.appendChild(trh);
-  table.appendChild(thead);
+  thead.appendChild(trh); tbl.appendChild(thead);
   const tbody = document.createElement('tbody');
   rows.forEach((row, i) => {
     const tr = document.createElement('tr');
-    tr.style.background = i % 2 === 0 ? '#fff' : '#f9f9f8';
-    row.forEach(cell => {
+    tr.style.background = i%2===0?'#fff':'#f9f9f8';
+    row.forEach((cell, ci) => {
       const td = document.createElement('td');
       td.textContent = cell;
-      td.style.cssText = 'padding:8px 10px;border-bottom:1px solid #f0f0f0;white-space:nowrap;color:#333;';
+      td.style.cssText = 'padding:7px 8px;border-bottom:1px solid #f0f0f0;white-space:nowrap;color:#333;';
+      if (ci === row.length-1 && String(cell).startsWith('¥')) td.style.color='#27ae60';
       tr.appendChild(td);
     });
     tbody.appendChild(tr);
   });
-  table.appendChild(tbody);
-  wrap.appendChild(table);
+  tbl.appendChild(tbody); wrap.appendChild(tbl);
+  return wrap;
+}
+
+function renderDashboard() {
+  const wrap = document.getElementById('dashboard-wrap');
+  wrap.innerHTML = '';
+
+  const cyc = getCycleRange(dashMonth);
+  const [y, m] = dashMonth.split('-');
+
+  // ---- 月別集計サマリー ----
+  const secSummary = document.createElement('div');
+  secSummary.style.cssText = 'background:#1a1a1a;color:#fff;border-radius:10px;padding:12px 14px;margin-bottom:14px;';
+
+  const sumTitle = document.createElement('p');
+  sumTitle.style.cssText = 'font-size:13px;font-weight:700;margin-bottom:8px;';
+  sumTitle.textContent = '📊 ' + parseInt(m) + '月 集計サマリー（' + cyc.startDisp + ' 〜 ' + cyc.endDisp + '）';
+  secSummary.appendChild(sumTitle);
+
+  const inCycleV = visits.filter(v => { const d=toDateStr(v.datetime); return d>=cyc.start&&d<=cyc.end; });
+  const inCycleR = rewards.filter(r => r.date>=cyc.start&&r.date<=cyc.end);
+  const inCycleA = advances.filter(a => (a.date||'').startsWith(dashMonth));
+
+  const visitTotal    = inCycleV.length;
+  const visitDone     = inCycleV.filter(v=>v.status===1).length;
+  const rewardPlanned = inCycleR.reduce((s,r)=>s+r.amount,0) + inCycleV.filter(v=>v.reward!=null).reduce((s,v)=>s+v.reward,0);
+  const rewardEarned  = inCycleR.filter(r=>r.status===1).reduce((s,r)=>s+r.amount,0) + inCycleV.filter(v=>v.status===1&&v.reward!=null).reduce((s,v)=>s+v.reward,0);
+  const advTotal      = inCycleA.reduce((s,a)=>s+a.amount,0);
+  const balance       = rewardEarned - advTotal;
+
+  const summaryRows = [
+    ['訪問予定', visitTotal + '件（訪問済 ' + visitDone + '件）'],
+    ['予定報酬', fmtYen(rewardPlanned)],
+    ['確定報酬', fmtYen(rewardEarned)],
+    ['前払い請求', fmtYen(advTotal)],
+    ['差引残高（支払見込）', (balance<0?'▲':'')+fmtYen(Math.abs(balance))],
+    ['支払予定日', cyc.paydayDisp],
+  ];
+  summaryRows.forEach(([label, val]) => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #333;';
+    const l = document.createElement('span'); l.textContent=label; l.style.cssText='font-size:12px;color:#ccc;';
+    const v = document.createElement('span'); v.textContent=val;   v.style.cssText='font-size:13px;font-weight:700;color:#fff;';
+    row.appendChild(l); row.appendChild(v);
+    secSummary.appendChild(row);
+  });
+  wrap.appendChild(secSummary);
+
+  // ---- 訪問予定明細 ----
+  const secLabel1 = document.createElement('p');
+  secLabel1.style.cssText = 'font-size:12px;font-weight:700;color:#555;margin:10px 0 6px;letter-spacing:.05em;';
+  secLabel1.textContent = '📋 訪問予定（' + parseInt(m) + '月サイクル ' + inCycleV.length + '件）';
+  wrap.appendChild(secLabel1);
+  wrap.appendChild(makeTbl(
+    ['日時','お客様名','ステータス','報酬'],
+    inCycleV.sort((a,b)=>(a.datetime||'').localeCompare(b.datetime||'')).map(v=>[
+      formatDT(v.datetime),
+      (v.customId?'['+v.customId+'] ':'')+(v.name||''),
+      v.status===1?'✓訪問済':'未訪問',
+      v.reward!=null?fmtYen(v.reward):'—'
+    ]),
+    'この期間の訪問予定はありません'
+  ));
+
+  // ---- 報酬明細 ----
+  const secLabel2 = document.createElement('p');
+  secLabel2.style.cssText = 'font-size:12px;font-weight:700;color:#555;margin:14px 0 6px;letter-spacing:.05em;';
+  secLabel2.textContent = '💰 報酬（' + inCycleR.length + '件）';
+  wrap.appendChild(secLabel2);
+  wrap.appendChild(makeTbl(
+    ['日付','件名','金額','状態'],
+    inCycleR.sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(r=>[
+      r.date||'—', r.name||'—', fmtYen(r.amount), r.status===1?'✓確定済':'未確定'
+    ]),
+    'この期間の報酬記録はありません'
+  ));
+
+  // ---- 前払い請求明細 ----
+  const secLabel3 = document.createElement('p');
+  secLabel3.style.cssText = 'font-size:12px;font-weight:700;color:#555;margin:14px 0 6px;letter-spacing:.05em;';
+  secLabel3.textContent = '💸 前払い請求（' + inCycleA.length + '件）';
+  wrap.appendChild(secLabel3);
+  wrap.appendChild(makeTbl(
+    ['日付','金額','メモ'],
+    inCycleA.sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(a=>[
+      a.date||'—', fmtYen(a.amount), a.memo||'—'
+    ]),
+    'この期間の前払い請求はありません'
+  ));
+
   const hint = document.createElement('p');
-  hint.style.cssText = 'font-size:11px;color:#aaa;margin-top:6px;';
-  hint.textContent = '← 横にスクロールできます';
+  hint.style.cssText = 'font-size:11px;color:#aaa;margin-top:10px;';
+  hint.textContent = '← 各テーブルは横にスクロールできます';
   wrap.appendChild(hint);
+
+  wrap.scrollIntoView({ behavior:'smooth', block:'start' });
 }
 
 // ===== JSON バックアップ =====
