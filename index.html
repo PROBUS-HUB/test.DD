@@ -12,12 +12,49 @@
 body { font-family: 'Hiragino Kaku Gothic ProN','Hiragino Sans','Noto Sans JP',sans-serif; background: #f5f5f3; color: #1a1a1a; min-height: 100vh; padding-bottom: 60px; }
 .wrap { max-width: 480px; margin: 0 auto; padding: 16px; }
 
-/* ヘッダー */
 .header { display:flex; align-items:center; justify-content:space-between; background:#1a1a1a; color:#fff; padding:14px 16px; position:sticky; top:0; z-index:100; }
 .header-title { font-size:16px; font-weight:600; }
 .header-right { display:flex; align-items:center; gap:10px; }
 .header-date { font-size:12px; color:#aaa; }
 .btn-settings { font-size:18px; background:none; border:none; cursor:pointer; color:#aaa; padding:2px; }
+
+/* ===== プランバッジ ===== */
+.plan-badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; letter-spacing:.02em; }
+.plan-badge.free    { background:#e8e8e6; color:#888; }
+.plan-badge.premium { background:linear-gradient(135deg,#f6c90e,#e8a80c); color:#1a1a1a; box-shadow:0 1px 4px rgba(230,170,0,.35); }
+
+/* ===== ロックモーダル ===== */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:9000; align-items:center; justify-content:center; padding:20px; }
+.modal-overlay.show { display:flex; }
+.modal-box { background:#fff; border-radius:20px; padding:28px 22px 22px; width:100%; max-width:360px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.25); animation:modalIn .22s cubic-bezier(.34,1.56,.64,1); }
+@keyframes modalIn { from { transform:scale(.88) translateY(12px); opacity:0; } to { transform:none; opacity:1; } }
+.modal-lock-icon { font-size:48px; margin-bottom:12px; }
+.modal-title { font-size:18px; font-weight:700; margin-bottom:8px; }
+.modal-desc  { font-size:13px; color:#666; line-height:1.6; margin-bottom:20px; }
+.modal-pw-input { width:100%; padding:13px 14px; font-size:16px; border:1.5px solid #ddd; border-radius:12px; outline:none; text-align:center; letter-spacing:.1em; transition:border-color .15s; margin-bottom:10px; }
+.modal-pw-input:focus { border-color:#1a1a1a; }
+.modal-pw-input.shake { animation:shake .35s; border-color:#c0392b; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 60%{transform:translateX(6px)} 80%{transform:translateX(-3px)} }
+.modal-pw-input.success { border-color:#27ae60; }
+.modal-btn-unlock { width:100%; padding:14px; font-size:15px; font-weight:700; background:#1a1a1a; color:#fff; border:none; border-radius:12px; cursor:pointer; margin-bottom:10px; transition:background .15s; }
+.modal-btn-unlock:active { background:#333; }
+.modal-btn-cancel { width:100%; padding:11px; font-size:14px; color:#888; background:none; border:1.5px solid #e8e8e6; border-radius:12px; cursor:pointer; }
+.modal-err { font-size:12px; color:#c0392b; min-height:16px; margin-bottom:6px; }
+.modal-success-anim { display:none; flex-direction:column; align-items:center; gap:8px; }
+.modal-success-anim.show { display:flex; }
+.checkmark { font-size:56px; animation:pop .4s cubic-bezier(.34,1.56,.64,1); }
+@keyframes pop { from{transform:scale(0);opacity:0} to{transform:none;opacity:1} }
+
+/* 無料制限バナー */
+.limit-banner { background:linear-gradient(135deg,#fff7e0,#ffedb3); border:1px solid #f6c90e; border-radius:14px; padding:14px 16px; margin-bottom:12px; display:flex; align-items:center; gap:10px; }
+.limit-banner-icon { font-size:24px; flex-shrink:0; }
+.limit-banner-text { flex:1; font-size:12px; line-height:1.6; color:#7a5c00; }
+.limit-banner-text strong { font-size:13px; display:block; margin-bottom:2px; color:#5a4000; }
+.limit-banner-btn { flex-shrink:0; padding:8px 14px; background:#1a1a1a; color:#fff; border:none; border-radius:10px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; }
+
+/* ロックされたボタン */
+.btn-locked { position:relative; opacity:.55; cursor:pointer !important; }
+.btn-locked::after { content:'🔒'; position:absolute; right:10px; top:50%; transform:translateY(-50%); font-size:14px; }
 
 /* 統計 */
 .stats { display:grid; grid-template-columns:repeat(5,1fr); gap:4px; margin:12px 0; }
@@ -96,8 +133,7 @@ body { font-family: 'Hiragino Kaku Gothic ProN','Hiragino Sans','Noto Sans JP',s
 .ac-amount { font-size:20px; font-weight:700; color:#e67e22; white-space:nowrap; }
 .advance-actions { display:flex; gap:8px; margin-top:10px; }
 
-/* 報酬管理 セクション見出し */
-.section-head { font-size:12px; font-weight:700; color:#888; letter-spacing:0.05em; text-transform:uppercase; margin:14px 0 6px; padding-left:4px; }
+.section-head { font-size:12px; font-weight:700; color:#888; letter-spacing:.05em; text-transform:uppercase; margin:14px 0 6px; padding-left:4px; }
 
 /* フォーム */
 .form-screen,.advance-form-screen,.reward-form-screen,.settings-screen { display:none; }
@@ -119,19 +155,16 @@ textarea.form-input { resize:none; line-height:1.6; }
 .yen-wrap::before { content:'¥'; position:absolute; left:12px; top:50%; transform:translateY(-50%); font-size:15px; color:#888; pointer-events:none; }
 .yen-wrap .form-input { padding-left:26px; }
 
-/* ステータスボタン */
 .status-btns { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
 .status-btn { padding:12px; font-size:14px; font-weight:600; border-radius:10px; cursor:pointer; border:1px solid #ddd; transition:all .15s; }
 .status-btn.active-unvisit { background:#1a1a1a; color:#fff; border-color:#1a1a1a; }
 .status-btn.active-visit   { background:#27ae60; color:#fff; border-color:#27ae60; }
 .status-btn.inactive       { background:#f5f5f3; color:#888; }
 
-/* 週起算日ボタン群 */
 .weekday-btns { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
 .wd-btn { padding:12px 4px; font-size:14px; font-weight:600; border-radius:10px; cursor:pointer; border:1px solid #ddd; background:#f5f5f3; color:#888; transition:all .15s; text-align:center; }
 .wd-btn.active { background:#1a1a1a; color:#fff; border-color:#1a1a1a; }
 
-/* 締め日・支払日設定 */
 .cycle-setting-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
 .cycle-setting-row label { font-size:13px; color:#555; white-space:nowrap; min-width:90px; }
 .cycle-input-wrap { display:flex; align-items:center; gap:6px; }
@@ -140,7 +173,6 @@ textarea.form-input { resize:none; line-height:1.6; }
 .cycle-unit { font-size:13px; color:#888; }
 .cycle-preview { background:#f0f9ff; border-radius:10px; padding:10px 14px; margin-top:4px; font-size:12px; color:#2980b9; line-height:1.8; }
 
-/* 共通ボタン */
 .btn-primary { width:100%; padding:14px; font-size:15px; font-weight:600; background:#1a1a1a; color:#fff; border:none; border-radius:12px; cursor:pointer; letter-spacing:.03em; margin-bottom:10px; }
 .btn-green   { width:100%; padding:14px; font-size:15px; font-weight:600; background:#27ae60; color:#fff; border:none; border-radius:12px; cursor:pointer; letter-spacing:.03em; margin-bottom:8px; }
 .btn-orange  { width:100%; padding:12px; font-size:14px; font-weight:600; background:#fff7ee; color:#e67e22; border:1px solid #f0c080; border-radius:12px; cursor:pointer; margin-bottom:8px; }
@@ -152,14 +184,17 @@ textarea.form-input { resize:none; line-height:1.6; }
 .empty-msg { text-align:center; padding:40px; color:#bbb; font-size:14px; }
 
 /* 写真 */
-.photo-upload-area { border:2px dashed #ddd; border-radius:10px; padding:16px; text-align:center; cursor:pointer; background:#fafafa; }
-.photo-upload-area:active { border-color:#1a1a1a; background:#f0f0f0; }
-.pua-icon { font-size:32px; margin-bottom:6px; }
-.pua-text { font-size:13px; color:#888; line-height:1.5; }
-.pua-text strong { color:#1a1a1a; }
-#f-photo { display:none; }
-#f-photo-preview { display:none; width:100%; border-radius:10px; margin-top:10px; object-fit:cover; max-height:220px; }
-.btn-photo-remove { width:100%; margin-top:8px; padding:8px; font-size:12px; font-weight:600; background:#fff0f0; color:#c0392b; border:1px solid #f5c6cb; border-radius:8px; cursor:pointer; display:none; }
+.photo-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:8px; }
+.photo-thumb { position:relative; aspect-ratio:1; border-radius:8px; overflow:hidden; background:#f0f0f0; }
+.photo-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+.photo-thumb-del { position:absolute; top:3px; right:3px; width:20px; height:20px; border-radius:50%; background:rgba(0,0,0,.55); color:#fff; border:none; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1; }
+.photo-add-slot { aspect-ratio:1; border:2px dashed #ddd; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; background:#fafafa; gap:2px; }
+.photo-add-slot:active { background:#f0f0f0; }
+.photo-add-icon { font-size:22px; }
+.photo-add-text { font-size:10px; color:#aaa; }
+.photo-count { font-size:11px; color:#888; margin-bottom:6px; }
+.card-photo-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; margin-bottom:8px; }
+.card-photo-grid img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:6px; cursor:pointer; }
 
 /* 検索バー */
 .search-bar-wrap { display:flex; gap:8px; align-items:center; margin-bottom:10px; }
@@ -192,7 +227,6 @@ textarea.form-input { resize:none; line-height:1.6; }
 .legend-dot { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
 .legend-dot.unvisited { background:#e74c3c; }
 .legend-dot.visited   { background:#27ae60; }
-#map-frame { width:100%; height:calc(100vh - 110px); border:none; }
 .map-pin-list { max-width:480px; margin:0 auto; padding:12px 16px; }
 .map-pin-item { display:flex; align-items:center; gap:10px; background:#fff; border-radius:10px; border:1px solid #e8e8e6; padding:10px 12px; margin-bottom:8px; }
 .map-pin-dot { width:14px; height:14px; border-radius:50%; flex-shrink:0; }
@@ -207,24 +241,9 @@ textarea.form-input { resize:none; line-height:1.6; }
 .map-filter-btn { flex:1; padding:7px 4px; font-size:12px; font-weight:600; border:1px solid #ddd; border-radius:8px; background:#fff; color:#888; cursor:pointer; }
 .map-filter-btn.active { background:#1a1a1a; color:#fff; border-color:#1a1a1a; }
 
-/* 複数写真 */
-.photo-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:8px; }
-.photo-thumb { position:relative; aspect-ratio:1; border-radius:8px; overflow:hidden; background:#f0f0f0; }
-.photo-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
-.photo-thumb-del { position:absolute; top:3px; right:3px; width:20px; height:20px; border-radius:50%; background:rgba(0,0,0,.55); color:#fff; border:none; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1; }
-.photo-add-slot { aspect-ratio:1; border:2px dashed #ddd; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; background:#fafafa; gap:2px; }
-.photo-add-slot:active { background:#f0f0f0; }
-.photo-add-icon { font-size:22px; }
-.photo-add-text { font-size:10px; color:#aaa; }
-.photo-count { font-size:11px; color:#888; margin-bottom:6px; }
-.card-photo-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:4px; margin-bottom:8px; }
-.card-photo-grid img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:6px; cursor:pointer; }
-
-/* PWAヒント */
 .pwa-hint { background:#fff; border-radius:12px; border:1px solid #e8e8e6; padding:12px 14px; margin-bottom:12px; font-size:12px; color:#888; line-height:1.6; }
 .pwa-hint strong { color:#1a1a1a; }
 
-/* ===== モバイル最適化 ===== */
 @media (max-width: 360px) {
   .stats { grid-template-columns: repeat(5,1fr); gap:2px; }
   .stat-card { padding:8px 2px; }
@@ -235,35 +254,53 @@ textarea.form-input { resize:none; line-height:1.6; }
   .wrap { padding:10px; }
 }
 
-/* GitHub Pages / iframe 埋め込み対応 */
 html, body { -webkit-overflow-scrolling: touch; overflow-x: hidden; }
-input, button, textarea, select {
-  font-size: 16px !important; /* iOS自動ズーム防止 */
-  -webkit-appearance: none;
-  border-radius: 10px;
-}
-input[type="number"], input[type="tel"], input[type="date"],
-input[type="datetime-local"], input[type="search"] {
-  font-size: 16px !important;
-}
-.btn-primary, .btn-green, .btn-orange, .btn-map-full,
-.btn-map, .btn-edit, .btn-del, .status-btn, .tab-btn,
-.month-nav, .wd-btn, .map-filter-btn, .btn-zip-search,
-.btn-search-clear, .map-pin-open, .status-badge {
-  -webkit-tap-highlight-color: rgba(0,0,0,0.1);
-  touch-action: manipulation;
-  cursor: pointer;
-}
-/* ダウンロードリンク（モバイルで長押し保存しやすく） */
-#csv-dl-link {
-  display: block;
-  padding: 14px 16px;
-  font-size: 15px;
-  word-break: break-all;
-}
+input, button, textarea, select { font-size: 16px !important; -webkit-appearance: none; border-radius: 10px; }
+input[type="number"], input[type="tel"], input[type="date"], input[type="datetime-local"], input[type="search"] { font-size: 16px !important; }
+.btn-primary, .btn-green, .btn-orange, .btn-map-full, .btn-map, .btn-edit, .btn-del, .status-btn, .tab-btn, .month-nav, .wd-btn, .map-filter-btn, .btn-zip-search, .btn-search-clear, .map-pin-open, .status-badge { -webkit-tap-highlight-color: rgba(0,0,0,0.1); touch-action: manipulation; cursor: pointer; }
+#csv-dl-link { display: block; padding: 14px 16px; font-size: 15px; word-break: break-all; }
+
+/* ===== プレミアムアップグレードカード（設定画面） ===== */
+.premium-card { background:linear-gradient(135deg,#1a1a1a 0%,#2c2c2c 100%); border-radius:18px; padding:22px 20px; margin-bottom:14px; color:#fff; position:relative; overflow:hidden; }
+.premium-card::before { content:''; position:absolute; top:-40px; right:-40px; width:160px; height:160px; background:radial-gradient(circle,rgba(246,201,14,.18) 0%,transparent 70%); border-radius:50%; pointer-events:none; }
+.premium-card-badge { display:inline-flex; align-items:center; gap:5px; background:linear-gradient(135deg,#f6c90e,#e8a80c); color:#1a1a1a; border-radius:20px; padding:4px 12px; font-size:11px; font-weight:800; letter-spacing:.05em; margin-bottom:12px; }
+.premium-card-title { font-size:18px; font-weight:700; margin-bottom:6px; }
+.premium-card-desc  { font-size:12px; color:#aaa; line-height:1.7; margin-bottom:16px; }
+.premium-features   { list-style:none; margin-bottom:18px; }
+.premium-features li { font-size:13px; color:#ddd; padding:3px 0; }
+.premium-features li::before { content:'✓ '; color:#f6c90e; font-weight:700; }
+.btn-unlock-premium { width:100%; padding:14px; font-size:15px; font-weight:700; background:linear-gradient(135deg,#f6c90e,#e8a80c); color:#1a1a1a; border:none; border-radius:12px; cursor:pointer; letter-spacing:.03em; }
+.btn-unlock-premium:active { opacity:.85; }
+
+/* 解除済み表示 */
+.unlocked-card { background:linear-gradient(135deg,#edfbf2,#d4f4e2); border:1.5px solid #c3efd4; border-radius:18px; padding:20px; margin-bottom:14px; text-align:center; }
+.unlocked-icon  { font-size:40px; margin-bottom:8px; }
+.unlocked-title { font-size:16px; font-weight:700; color:#1a7a45; margin-bottom:4px; }
+.unlocked-desc  { font-size:12px; color:#2e9b5e; }
+.btn-lock-again { margin-top:12px; padding:10px 20px; font-size:13px; color:#c0392b; background:none; border:1.5px solid #f5c6cb; border-radius:10px; cursor:pointer; }
 </style>
 </head>
 <body>
+
+<!-- ===== ロック解除モーダル ===== -->
+<div class="modal-overlay" id="unlock-modal">
+  <div class="modal-box">
+    <div id="modal-normal-content">
+      <div class="modal-lock-icon">🔐</div>
+      <div class="modal-title">プレミアム機能</div>
+      <div class="modal-desc" id="modal-feature-desc">この機能はプレミアムプランでご利用いただけます。<br>パスワードを入力して解除してください。</div>
+      <input type="password" id="modal-pw-input" class="modal-pw-input" placeholder="パスワードを入力" />
+      <div class="modal-err" id="modal-err"></div>
+      <button class="modal-btn-unlock" onclick="tryUnlock()">🔓 解除する</button>
+      <button class="modal-btn-cancel" onclick="closeUnlockModal()">キャンセル</button>
+    </div>
+    <div class="modal-success-anim" id="modal-success-anim">
+      <div class="checkmark">✅</div>
+      <div style="font-size:16px;font-weight:700;color:#27ae60;">解除しました！</div>
+      <div style="font-size:13px;color:#888;margin-top:4px;">全機能をご利用いただけます</div>
+    </div>
+  </div>
+</div>
 
 <!-- ===== メイン画面 ===== -->
 <div id="main-screen">
@@ -289,6 +326,16 @@ input[type="datetime-local"], input[type="search"] {
         <button class="btn-search-clear" id="btn-search-clear" onclick="clearSearch()">✕ クリア</button>
       </div>
       <div class="search-result-bar" id="search-result-bar"></div>
+    </div>
+
+    <!-- 無料プラン上限バナー（動的表示） -->
+    <div id="limit-banner" class="limit-banner" style="display:none;">
+      <div class="limit-banner-icon">⚠️</div>
+      <div class="limit-banner-text">
+        <strong>無料プランの上限に近づいています</strong>
+        訪問予定は最大10件まで登録できます。<span id="limit-count-text"></span>
+      </div>
+      <button class="limit-banner-btn" onclick="openSettings()">解除 →</button>
     </div>
 
     <div class="stats">
@@ -495,7 +542,10 @@ input[type="datetime-local"], input[type="search"] {
   </div>
   <div class="wrap">
 
-    <!-- 締め日・支払日設定（新規追加） -->
+    <!-- ===== プラン状態カード ===== -->
+    <div id="plan-status-area"></div>
+
+    <!-- 報酬サイクル設定 -->
     <div class="card">
       <p class="card-label">報酬サイクル設定</p>
       <p style="font-size:12px;color:#aaa;margin-bottom:12px;">報酬タブのサマリーに使用する締め日と支払日を設定します</p>
@@ -526,51 +576,48 @@ input[type="datetime-local"], input[type="search"] {
         <button class="wd-btn" id="wdbtn-6" onclick="setWeekStart(6)">土曜日</button>
       </div>
     </div>
-    <!-- CSV エクスポート -->
+
+    <!-- CSV エクスポート（プレミアムロック） -->
     <div class="card">
       <p class="card-label">CSVエクスポート</p>
-      <p style="font-size:12px;color:#aaa;margin-bottom:12px;">訪問予定・報酬・前払い請求のデータをCSVファイルとしてダウンロードします。Excelで開いて確認したり、バックアップとして保存できます。</p>
-      <button class="btn-primary" style="background:#2980b9;margin-bottom:8px;" onclick="exportCSV('visits')">📋 訪問予定をエクスポート</button>
-      <button class="btn-primary" style="background:#27ae60;margin-bottom:8px;" onclick="exportCSV('rewards')">💰 報酬データをエクスポート</button>
-      <button class="btn-primary" style="background:#e67e22;margin-bottom:8px;" onclick="exportCSV('advances')">💸 前払い請求をエクスポート</button>
+      <p style="font-size:12px;color:#aaa;margin-bottom:12px;">訪問予定・報酬・前払い請求のデータをCSVファイルとしてダウンロードします。</p>
+      <button id="btn-csv-visits"  class="btn-primary" style="background:#2980b9;margin-bottom:8px;" onclick="handleLockedAction('csv', function(){ exportCSV('visits') })">📋 訪問予定をエクスポート</button>
+      <button id="btn-csv-rewards" class="btn-primary" style="background:#27ae60;margin-bottom:8px;" onclick="handleLockedAction('csv', function(){ exportCSV('rewards') })">💰 報酬データをエクスポート</button>
+      <button id="btn-csv-advances" class="btn-primary" style="background:#e67e22;margin-bottom:8px;" onclick="handleLockedAction('csv', function(){ exportCSV('advances') })">💸 前払い請求をエクスポート</button>
       <div id="csv-dl-wrap"></div>
       <p style="font-size:11px;color:#aaa;margin-top:4px;">ボタンを押すとダウンロードリンクが表示されます。リンクを長押し（またはタップ）して保存してください。</p>
     </div>
 
-    <!-- CSV インポート -->
+    <!-- CSV インポート（プレミアムロック） -->
     <div class="card">
       <p class="card-label">CSVインポート</p>
-      <p style="font-size:12px;color:#aaa;margin-bottom:8px;">エクスポートしたCSVファイルを読み込んでデータを復元します。同じIDのデータは上書きされます。新しいIDのデータは追加されます。</p>
+      <p style="font-size:12px;color:#aaa;margin-bottom:8px;">エクスポートしたCSVファイルを読み込んでデータを復元します。</p>
       <input type="file" id="csv-import-file" accept=".csv" style="display:none;" onchange="importCSV(this)" />
-      <button class="btn-primary" style="background:#555;margin-bottom:0;" onclick="triggerImport()">📂 CSVファイルを選択してインポート</button>
+      <button id="btn-csv-import" class="btn-primary" style="background:#555;margin-bottom:0;" onclick="handleLockedAction('csv', function(){ triggerImport() })">📂 CSVファイルを選択してインポート</button>
       <p id="csv-import-status" style="font-size:12px;margin-top:8px;min-height:16px;"></p>
     </div>
 
-    <!-- 総合ダッシュボード -->
+    <!-- 総合ダッシュボード（プレミアムロック） -->
     <div class="card">
       <p class="card-label">総合データ一覧</p>
       <p style="font-size:12px;color:#aaa;margin-bottom:10px;">月別サマリーと全データの明細をまとめて確認できます</p>
-
-      <!-- 月選択 -->
       <div style="display:flex;align-items:center;justify-content:space-between;background:#f5f5f3;border-radius:10px;padding:8px 12px;margin-bottom:10px;">
         <button onclick="dashChangeMonth(-1)" style="background:none;border:none;font-size:20px;cursor:pointer;color:#1a1a1a;padding:2px 8px;">‹</button>
         <span id="dash-month-label" style="font-size:14px;font-weight:700;"></span>
         <button onclick="dashChangeMonth(1)"  style="background:none;border:none;font-size:20px;cursor:pointer;color:#1a1a1a;padding:2px 8px;">›</button>
       </div>
-
-      <button onclick="renderDashboard()" style="width:100%;padding:10px;font-size:14px;font-weight:600;background:#1a1a1a;color:#fff;border:none;border-radius:10px;cursor:pointer;margin-bottom:12px;">🔄 表示する</button>
-
+      <button id="btn-dashboard" onclick="handleLockedAction('dashboard', function(){ renderDashboard() })" style="width:100%;padding:10px;font-size:14px;font-weight:600;background:#1a1a1a;color:#fff;border:none;border-radius:10px;cursor:pointer;margin-bottom:12px;">🔄 表示する</button>
       <div id="dashboard-wrap"></div>
     </div>
 
-    <!-- JSONバックアップ -->
+    <!-- JSONバックアップ（プレミアムロック） -->
     <div class="card">
       <p class="card-label">全データ バックアップ／復元（JSON）</p>
       <p style="font-size:12px;color:#aaa;margin-bottom:10px;">訪問・報酬・前払い・設定を含む全データをまとめてバックアップ・復元できます</p>
-      <button class="btn-primary" style="background:#555;margin-bottom:8px;" onclick="exportJSON()">💾 全データをバックアップ（コピー）</button>
+      <button id="btn-json-export" class="btn-primary" style="background:#555;margin-bottom:8px;" onclick="handleLockedAction('backup', function(){ exportJSON() })">💾 全データをバックアップ（コピー）</button>
       <div id="json-export-wrap"></div>
       <textarea id="json-import-area" class="form-input" rows="4" placeholder="バックアップしたJSONをここに貼り付け..." style="margin-top:10px;font-size:12px;font-family:monospace;"></textarea>
-      <button class="btn-primary" style="background:#2980b9;margin-top:8px;margin-bottom:0;" onclick="importJSON()">📂 貼り付けたJSONから復元</button>
+      <button id="btn-json-import" class="btn-primary" style="background:#2980b9;margin-top:8px;margin-bottom:0;" onclick="handleLockedAction('backup', function(){ importJSON() })">📂 貼り付けたJSONから復元</button>
       <p id="json-import-status" style="font-size:12px;margin-top:8px;min-height:16px;"></p>
     </div>
 
@@ -581,18 +628,48 @@ input[type="datetime-local"], input[type="search"] {
   </div>
 </div>
 
+<!-- ===== マップ画面 ===== -->
+<div id="map-screen" class="map-screen">
+  <div class="map-header">
+    <button class="btn-back" onclick="closeMapScreen()" style="color:#ffffffaa;">← 戻る</button>
+    <span class="map-header-title">🗺️ 訪問マップ</span>
+    <span style="width:48px;"></span>
+  </div>
+  <div class="map-filter-bar">
+    <button class="map-filter-btn active" id="mf-all"       onclick="setMapFilter('all')">すべて</button>
+    <button class="map-filter-btn"        id="mf-unvisited" onclick="setMapFilter('unvisited')">未訪問のみ</button>
+    <button class="map-filter-btn"        id="mf-today"     onclick="setMapFilter('today')">今日のみ</button>
+  </div>
+  <div class="map-legend">
+    <span class="legend-item"><span class="legend-dot unvisited"></span>未訪問</span>
+    <span class="legend-item"><span class="legend-dot visited"></span>訪問済（参考表示）</span>
+    <span style="font-size:11px;color:#aaa;margin-left:auto;">訪問済みにするとピンが消えます</span>
+  </div>
+  <div class="map-pin-list" id="map-pin-list"></div>
+  <div id="map-multi-btn-wrap" style="max-width:480px;margin:0 auto;padding:0 16px 16px;">
+    <button class="btn-primary" style="background:#4285F4;" onclick="openMultiMap()">📍 まとめてマップで開く</button>
+  </div>
+</div>
+
 <script>
-// ===== キー・状態 =====
+// =============================================
+// ★★★ パスワード設定（ここを変更してください）★★★
+const PREMIUM_PASSWORD = 'premium2024';
+// =============================================
+
+const FREE_VISIT_LIMIT = 10; // 無料プランの訪問予定上限
+
 const KEY_VISITS   = 'dorakuru_visits';
 const KEY_ADVANCES = 'dorakuru_advances';
 const KEY_REWARDS  = 'dorakuru_rewards';
 const KEY_SETTINGS = 'dorakuru_settings';
+const KEY_PREMIUM  = 'dorakuru_premium'; // プレミアム解除フラグ
 
 let visits   = [];
 let advances = [];
 let rewards  = [];
-// ★ closingDay・payDay を settings に追加（デフォルト15日締め・27日払い）
 let settings = { weekStart: 1, closingDay: 15, payDay: 27 };
+let isPremium = false; // プレミアム状態
 
 let editingVisitId   = null;
 let searchQuery = '';
@@ -608,21 +685,170 @@ let currentMonth = (() => {
   return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;
 })();
 
+// ロック解除後に実行するコールバック
+let pendingUnlockCallback = null;
+
 // ===== データ読み書き =====
 function loadData() {
   try { visits   = JSON.parse(localStorage.getItem(KEY_VISITS)   || '[]'); } catch(e) { visits=[]; }
   try { advances = JSON.parse(localStorage.getItem(KEY_ADVANCES) || '[]'); } catch(e) { advances=[]; }
   try { rewards  = JSON.parse(localStorage.getItem(KEY_REWARDS)  || '[]'); } catch(e) { rewards=[]; }
-  try {
-    // ★ closingDay・payDay もマージ（既存データとの後方互換）
-    settings = { weekStart:1, closingDay:15, payDay:27, ...JSON.parse(localStorage.getItem(KEY_SETTINGS) || '{}') };
-  } catch(e) {}
+  try { settings = { weekStart:1, closingDay:15, payDay:27, ...JSON.parse(localStorage.getItem(KEY_SETTINGS) || '{}') }; } catch(e) {}
+  // プレミアム状態を読み込み
+  isPremium = localStorage.getItem(KEY_PREMIUM) === 'true';
 }
 function saveData() {
   try { localStorage.setItem(KEY_VISITS,   JSON.stringify(visits));   } catch(e) {}
   try { localStorage.setItem(KEY_ADVANCES, JSON.stringify(advances)); } catch(e) {}
   try { localStorage.setItem(KEY_REWARDS,  JSON.stringify(rewards));  } catch(e) {}
   try { localStorage.setItem(KEY_SETTINGS, JSON.stringify(settings)); } catch(e) {}
+}
+
+// ===== ★ プレミアム管理 =====
+function checkPremium() { return isPremium; }
+
+// ロックされた機能をタップしたときの処理
+function handleLockedAction(feature, callback) {
+  if (isPremium) {
+    // 解除済みならそのまま実行
+    callback();
+    return;
+  }
+  // ロック中ならモーダル表示
+  const featureNames = {
+    'csv':       'CSVエクスポート / インポート',
+    'backup':    'バックアップ / 復元',
+    'dashboard': '総合ダッシュボード'
+  };
+  document.getElementById('modal-feature-desc').innerHTML =
+    `<strong>🔒 ${featureNames[feature]||'この機能'}</strong> はプレミアムプランでご利用いただけます。<br>パスワードを入力して解除してください。`;
+  pendingUnlockCallback = callback;
+  openUnlockModal();
+}
+
+function openUnlockModal() {
+  document.getElementById('modal-pw-input').value = '';
+  document.getElementById('modal-err').textContent = '';
+  document.getElementById('modal-normal-content').style.display = 'block';
+  document.getElementById('modal-success-anim').classList.remove('show');
+  document.getElementById('modal-pw-input').classList.remove('shake','success');
+  document.getElementById('unlock-modal').classList.add('show');
+  setTimeout(() => document.getElementById('modal-pw-input').focus(), 200);
+}
+function closeUnlockModal() {
+  document.getElementById('unlock-modal').classList.remove('show');
+  pendingUnlockCallback = null;
+}
+
+function tryUnlock() {
+  const pw = document.getElementById('modal-pw-input').value;
+  if (pw === PREMIUM_PASSWORD) {
+    // 成功
+    isPremium = true;
+    localStorage.setItem(KEY_PREMIUM, 'true');
+    document.getElementById('modal-pw-input').classList.remove('shake');
+    document.getElementById('modal-pw-input').classList.add('success');
+    document.getElementById('modal-err').textContent = '';
+    // アニメーション
+    document.getElementById('modal-normal-content').style.display = 'none';
+    document.getElementById('modal-success-anim').classList.add('show');
+    updateLockedButtonUI();
+    updateLimitBanner();
+    if (document.getElementById('settings-screen').style.display !== 'none') {
+      renderPlanStatusCard();
+    }
+    setTimeout(() => {
+      closeUnlockModal();
+      if (pendingUnlockCallback) {
+        pendingUnlockCallback();
+        pendingUnlockCallback = null;
+      }
+    }, 1400);
+  } else {
+    // 失敗
+    document.getElementById('modal-err').textContent = 'パスワードが違います';
+    const input = document.getElementById('modal-pw-input');
+    input.classList.remove('shake');
+    void input.offsetWidth; // reflow
+    input.classList.add('shake');
+    input.value = '';
+    input.focus();
+  }
+}
+
+// Enterキーで解除
+document.getElementById('modal-pw-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') tryUnlock();
+});
+
+// ロック済みボタンのUI更新
+function updateLockedButtonUI() {
+  const lockedIds = ['btn-csv-visits','btn-csv-rewards','btn-csv-advances','btn-csv-import','btn-dashboard','btn-json-export','btn-json-import'];
+  lockedIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (isPremium) {
+      el.classList.remove('btn-locked');
+    } else {
+      el.classList.add('btn-locked');
+    }
+  });
+}
+
+// プレミアムを再ロック（管理用）
+function lockPremium() {
+  if (!confirm('プレミアムを再ロックします。よろしいですか？')) return;
+  isPremium = false;
+  localStorage.removeItem(KEY_PREMIUM);
+  updateLockedButtonUI();
+  updateLimitBanner();
+  renderPlanStatusCard();
+}
+
+// ===== 設定画面：プラン状態カード描画 =====
+function renderPlanStatusCard() {
+  const area = document.getElementById('plan-status-area');
+  if (isPremium) {
+    area.innerHTML = `
+      <div class="unlocked-card">
+        <div class="unlocked-icon">🌟</div>
+        <div class="unlocked-title">プレミアムプラン利用中</div>
+        <div class="unlocked-desc">すべての機能をご利用いただけます。<br>CSV・バックアップ・ダッシュボード・無制限登録</div>
+        <button class="btn-lock-again" onclick="lockPremium()">🔒 再ロックする</button>
+      </div>`;
+  } else {
+    area.innerHTML = `
+      <div class="premium-card">
+        <div class="premium-card-badge">⭐ PREMIUM</div>
+        <div class="premium-card-title">プレミアムに解除する</div>
+        <div class="premium-card-desc">パスワードを入力して全機能を開放してください</div>
+        <ul class="premium-features">
+          <li>訪問予定 無制限登録（無料は10件まで）</li>
+          <li>CSVエクスポート / インポート</li>
+          <li>JSONバックアップ / 復元</li>
+          <li>総合ダッシュボード</li>
+        </ul>
+        <button class="btn-unlock-premium" onclick="openUnlockModal()">🔓 パスワードで解除する</button>
+      </div>`;
+  }
+}
+
+// ===== 上限バナー制御 =====
+function updateLimitBanner() {
+  const banner = document.getElementById('limit-banner');
+  if (isPremium) { banner.style.display = 'none'; return; }
+  const count = visits.length;
+  if (count >= FREE_VISIT_LIMIT - 2) { // 残り2件以下で表示
+    banner.style.display = 'flex';
+    const remaining = FREE_VISIT_LIMIT - count;
+    if (remaining <= 0) {
+      document.getElementById('limit-count-text').textContent = '上限に達しています。';
+    } else {
+      document.getElementById('limit-count-text').textContent = `残り${remaining}件登録できます。`;
+    }
+  } else {
+    banner.style.display = 'none';
+  }
 }
 
 // ===== 写真（最大5枚）=====
@@ -632,13 +858,8 @@ document.getElementById('f-photo').addEventListener('change', function(e) {
   const file = e.target.files && e.target.files[0];
   if (!file) return;
   this.value = '';
-  if (currentPhotos.length >= MAX_PHOTOS) {
-    alert(`写真は最大${MAX_PHOTOS}枚までです`); return;
-  }
-  compressImage(file, dataUrl => {
-    currentPhotos.push(dataUrl);
-    renderPhotoGrid();
-  });
+  if (currentPhotos.length >= MAX_PHOTOS) { alert(`写真は最大${MAX_PHOTOS}枚までです`); return; }
+  compressImage(file, dataUrl => { currentPhotos.push(dataUrl); renderPhotoGrid(); });
 });
 
 function compressImage(file, cb) {
@@ -677,12 +898,7 @@ function renderPhotoGrid() {
   }
   grid.innerHTML = html;
 }
-
-function removePhoto(idx) {
-  currentPhotos.splice(idx, 1);
-  renderPhotoGrid();
-}
-
+function removePhoto(idx) { currentPhotos.splice(idx, 1); renderPhotoGrid(); }
 function viewPhoto(idx) {
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:9999;display:flex;align-items:center;justify-content:center;';
@@ -690,15 +906,9 @@ function viewPhoto(idx) {
   const img = document.createElement('img');
   img.src = currentPhotos[idx];
   img.style.cssText = 'max-width:95vw;max-height:90vh;border-radius:8px;object-fit:contain;';
-  overlay.appendChild(img);
-  document.body.appendChild(overlay);
+  overlay.appendChild(img); document.body.appendChild(overlay);
 }
-
-function resetPhotoUI() {
-  currentPhotos = [];
-  renderPhotoGrid();
-}
-
+function resetPhotoUI() { currentPhotos = []; renderPhotoGrid(); }
 function setPhotoPreviews(photos) {
   if (!photos) { resetPhotoUI(); return; }
   currentPhotos = Array.isArray(photos) ? [...photos] : [photos];
@@ -723,39 +933,24 @@ function switchTab(tab) {
   const isMonth  = tab === 'month';
   const isReward = tab === 'reward';
   const isMonthOrReward = isMonth || isReward;
-
   document.getElementById('month-selector').classList.toggle('show', isMonthOrReward);
   document.getElementById('reward-summary').classList.toggle('show', isReward);
   document.getElementById('main-btn-area').style.display   = isReward ? 'none' : 'block';
   document.getElementById('reward-btn-area').style.display = isReward ? 'block' : 'none';
-
   if (isMonthOrReward) updateMonthLabel();
-  renderList();
-  updateStats();
+  renderList(); updateStats();
 }
 
-// ===== 月ナビ =====
 function changeMonth(delta) {
   const [y,m] = currentMonth.split('-').map(Number);
   const d = new Date(y, m-1+delta, 1);
   currentMonth = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-  updateMonthLabel();
-  // ダッシュボード月ラベル初期化
-  const dashLabelEl = document.getElementById('dash-month-label');
-  if (dashLabelEl) {
-    const [dy,dm] = dashMonth.split('-');
-    dashLabelEl.textContent = dy + '年 ' + parseInt(dm) + '月';
-  }
-  renderList();
-  updateStats();
+  updateMonthLabel(); renderList(); updateStats();
 }
 function updateMonthLabel() {
   const [y,m] = currentMonth.split('-');
-  if (currentTab === 'reward') {
-    document.getElementById('month-label').textContent = `${y}年 ${parseInt(m)}月サイクル`;
-  } else {
-    document.getElementById('month-label').textContent = `${y}年 ${parseInt(m)}月`;
-  }
+  document.getElementById('month-label').textContent =
+    currentTab === 'reward' ? `${y}年 ${parseInt(m)}月サイクル` : `${y}年 ${parseInt(m)}月`;
 }
 
 // ===== 日付ユーティリティ =====
@@ -790,97 +985,61 @@ function fmtDate(d) {
   return `${parseInt(y)}/${parseInt(m)}/${parseInt(day)}`;
 }
 
-// ===== ★ 締め日サイクル計算（settings.closingDay / settings.payDay を使用）=====
-// cycleMonth: 'YYYY-MM' 形式（支払月）
-// 例）closingDay=15, payDay=27, cycleMonth='2026-06'
-//   → 集計: 2026-05-16 〜 2026-06-15、支払日: 2026-06-27
 function getCycleRange(cycleMonth) {
   const [y, m] = cycleMonth.split('-').map(Number);
-  const cd = settings.closingDay; // 締め日
-  const pd = settings.payDay;     // 支払日
-
-  // 集計開始日 = 前月の（締め日+1）日
+  const cd = settings.closingDay;
+  const pd = settings.payDay;
   const startDate = new Date(y, m-2, cd + 1);
-  // 集計終了日 = 当月の締め日
   const endDate   = new Date(y, m-1, cd);
-  // 支払予定日 = 当月の支払日
   const payday    = new Date(y, m-1, pd);
-
   const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   const fmtDisp = d => `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
-  return {
-    start:      fmt(startDate),
-    end:        fmt(endDate),
-    payday:     fmt(payday),
-    startDisp:  fmtDisp(startDate),
-    endDisp:    fmtDisp(endDate),
-    paydayDisp: fmtDisp(payday),
-  };
+  return { start:fmt(startDate), end:fmt(endDate), payday:fmt(payday), startDisp:fmtDisp(startDate), endDisp:fmtDisp(endDate), paydayDisp:fmtDisp(payday) };
 }
 
-// ===== ★ 設定画面：サイクルプレビュー更新 =====
 function updateCyclePreview() {
   const cd = parseInt(document.getElementById('s-closing-day').value) || settings.closingDay;
   const pd = parseInt(document.getElementById('s-pay-day').value)     || settings.payDay;
   const now = new Date();
   const cm  = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-
-  // 仮の settings で計算
   const orig = { ...settings };
-  settings.closingDay = cd;
-  settings.payDay     = pd;
+  settings.closingDay = cd; settings.payDay = pd;
   const cyc = getCycleRange(cm);
-  settings = orig; // 元に戻す
-
-  document.getElementById('cycle-preview').textContent =
-    `今月のサイクル例\n集計期間：${cyc.startDisp} 〜 ${cyc.endDisp}\n支払予定日：${cyc.paydayDisp}`;
-  document.getElementById('cycle-preview').style.whiteSpace = 'pre-line';
+  settings = orig;
+  const el = document.getElementById('cycle-preview');
+  el.textContent = `今月のサイクル例\n集計期間：${cyc.startDisp} 〜 ${cyc.endDisp}\n支払予定日：${cyc.paydayDisp}`;
+  el.style.whiteSpace = 'pre-line';
 }
 
-// ===== ★ 設定画面：サイクル設定を保存 =====
 function saveCycleSettings() {
   const cd = parseInt(document.getElementById('s-closing-day').value);
   const pd = parseInt(document.getElementById('s-pay-day').value);
   if (!cd || cd < 1 || cd > 31) { alert('締め日を1〜31の数字で入力してください'); return; }
   if (!pd || pd < 1 || pd > 31) { alert('支払日を1〜31の数字で入力してください'); return; }
-  settings.closingDay = cd;
-  settings.payDay     = pd;
-  saveData();
-  updateCyclePreview();
+  settings.closingDay = cd; settings.payDay = pd;
+  saveData(); updateCyclePreview();
   alert(`保存しました。\n締め日：毎月${cd}日　支払日：毎月${pd}日`);
 }
 
 // ===== 統計 =====
 function updateStats() {
   const today=todayStr(), tMonth=thisMonthStr();
-  const tom  = offsetDay(1), da = offsetDay(2);
-  const vToday    = visits.filter(v=>toDateStr(v.datetime)===today);
-  const vTomorrow = visits.filter(v=>toDateStr(v.datetime)===tom);
-  const vDayafter = visits.filter(v=>toDateStr(v.datetime)===da);
-  const vMonth    = visits.filter(v=>(v.datetime||'').startsWith(tMonth));
-  const vAll      = visits.filter(v=>v.status===1);
-  document.getElementById('count-today').textContent    = vToday.length;
-  document.getElementById('count-tomorrow').textContent = vTomorrow.length;
-  document.getElementById('count-dayafter').textContent = vDayafter.length;
-  document.getElementById('count-month').textContent    = vMonth.length;
-  document.getElementById('count-total').textContent    = vAll.length;
+  const tom=offsetDay(1), da=offsetDay(2);
+  document.getElementById('count-today').textContent    = visits.filter(v=>toDateStr(v.datetime)===today).length;
+  document.getElementById('count-tomorrow').textContent = visits.filter(v=>toDateStr(v.datetime)===tom).length;
+  document.getElementById('count-dayafter').textContent = visits.filter(v=>toDateStr(v.datetime)===da).length;
+  document.getElementById('count-month').textContent    = visits.filter(v=>(v.datetime||'').startsWith(tMonth)).length;
+  document.getElementById('count-total').textContent    = visits.filter(v=>v.status===1).length;
 
   if (currentTab==='reward') {
     const cyc = getCycleRange(currentMonth);
-    const inCycleR = rewards.filter(r=>r.date>=cyc.start && r.date<=cyc.end);
-    const inCycleV = visits.filter(v=>{
-      const d=toDateStr(v.datetime);
-      return d>=cyc.start && d<=cyc.end && v.reward!=null;
-    });
+    const inCycleR = rewards.filter(r=>r.date>=cyc.start&&r.date<=cyc.end);
+    const inCycleV = visits.filter(v=>{const d=toDateStr(v.datetime);return d>=cyc.start&&d<=cyc.end&&v.reward!=null;});
     const inCycleA = advances.filter(a=>(a.date||'').startsWith(currentMonth));
-
-    const planned  = inCycleR.reduce((s,r)=>s+r.amount,0)
-                   + inCycleV.reduce((s,v)=>s+v.reward,0);
-    const earned   = inCycleR.filter(r=>r.status===1).reduce((s,r)=>s+r.amount,0)
-                   + inCycleV.filter(v=>v.status===1).reduce((s,v)=>s+v.reward,0);
+    const planned  = inCycleR.reduce((s,r)=>s+r.amount,0)+inCycleV.reduce((s,v)=>s+v.reward,0);
+    const earned   = inCycleR.filter(r=>r.status===1).reduce((s,r)=>s+r.amount,0)+inCycleV.filter(v=>v.status===1).reduce((s,v)=>s+v.reward,0);
     const advTotal = inCycleA.reduce((s,a)=>s+a.amount,0);
     const balance  = earned - advTotal;
-
     const [y,m] = currentMonth.split('-');
     document.getElementById('rs-cycle-label').textContent = `${parseInt(m)}月サイクル`;
     document.getElementById('rs-period').textContent  = `${cyc.startDisp} 〜 ${cyc.endDisp}`;
@@ -894,7 +1053,6 @@ function updateStats() {
   }
 }
 
-// ===== ステータス =====
 function selectStatus(val) {
   selectedStatus = val;
   document.getElementById('sbtn-0').className = 'status-btn '+(val===0?'active-unvisit':'inactive');
@@ -908,6 +1066,16 @@ function selectRewardStatus(val) {
 
 // ===== 訪問フォーム =====
 function openForm(id) {
+  // 新規登録時に無料上限チェック
+  if (!id && !isPremium && visits.length >= FREE_VISIT_LIMIT) {
+    // モーダルで解除促進
+    document.getElementById('modal-feature-desc').innerHTML =
+      `<strong>🔒 訪問予定が上限（${FREE_VISIT_LIMIT}件）に達しました</strong><br>プレミアムプランでは無制限に登録できます。パスワードを入力してください。`;
+    pendingUnlockCallback = () => openForm();
+    openUnlockModal();
+    return;
+  }
+
   editingVisitId = id||null;
   document.getElementById('form-title').textContent = id?'編集':'新規登録';
   document.getElementById('form-error').textContent = '';
@@ -933,8 +1101,7 @@ function openForm(id) {
     document.getElementById('f-id').value       = '';
     document.getElementById('f-zip').value       = '';
     document.getElementById('zip-status').textContent = '';
-    document.getElementById('f-datetime').value =
-      `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    document.getElementById('f-datetime').value  = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
     document.getElementById('f-name').value    = '';
     document.getElementById('f-address').value = '';
     document.getElementById('f-tel').value     = '';
@@ -961,22 +1128,16 @@ function saveVisit() {
   if(!name){errEl.textContent='お客様名を入力してください';return;}
   if(customId){
     const dup = visits.find(x => x.customId === customId && x.id !== editingVisitId);
-    if(dup){
-      errEl.textContent=`ID「${customId}」はすでに登録されています（${dup.name}）`;
-      document.getElementById('f-id').focus();
-      return;
-    }
+    if(dup){ errEl.textContent=`ID「${customId}」はすでに登録されています（${dup.name}）`; document.getElementById('f-id').focus(); return; }
   }
   errEl.textContent='';
   if(editingVisitId){
     const idx=visits.findIndex(x=>x.id===editingVisitId);
-    if(idx>=0) visits[idx]={...visits[idx],customId,zipcode,datetime,name,address,tel,memo,
-      reward,status:selectedStatus,photos};
+    if(idx>=0) visits[idx]={...visits[idx],customId,zipcode,datetime,name,address,tel,memo,reward,status:selectedStatus,photos};
   } else {
-    visits.push({id:Date.now().toString(),customId,zipcode,datetime,name,address,tel,memo,
-      reward,status:selectedStatus,photos});
+    visits.push({id:Date.now().toString(),customId,zipcode,datetime,name,address,tel,memo,reward,status:selectedStatus,photos});
   }
-  saveData(); showScreen('main-screen'); renderList(); updateStats();
+  saveData(); showScreen('main-screen'); renderList(); updateStats(); updateLimitBanner();
 }
 
 // ===== 報酬フォーム =====
@@ -986,45 +1147,30 @@ function openRewardForm(id) {
   document.getElementById('reward-form-error').textContent = '';
   if(id){
     const r=rewards.find(x=>x.id===id);
-    if(r){
-      document.getElementById('rf-date').value   = r.date||'';
-      document.getElementById('rf-name').value   = r.name||'';
-      document.getElementById('rf-amount').value = r.amount||'';
-      document.getElementById('rf-memo').value   = r.memo||'';
-      selectRewardStatus(r.status!=null?r.status:1);
-    }
+    if(r){ document.getElementById('rf-date').value=r.date||''; document.getElementById('rf-name').value=r.name||''; document.getElementById('rf-amount').value=r.amount||''; document.getElementById('rf-memo').value=r.memo||''; selectRewardStatus(r.status!=null?r.status:1); }
   } else {
-    document.getElementById('rf-date').value   = todayStr();
-    document.getElementById('rf-name').value   = '';
-    document.getElementById('rf-amount').value = '';
-    document.getElementById('rf-memo').value   = '';
-    selectRewardStatus(1);
+    document.getElementById('rf-date').value=todayStr(); document.getElementById('rf-name').value=''; document.getElementById('rf-amount').value=''; document.getElementById('rf-memo').value=''; selectRewardStatus(1);
   }
   showScreen('reward-form-screen');
 }
 function closeRewardForm() { showScreen('main-screen'); renderList(); }
 function saveReward() {
-  const date   = document.getElementById('rf-date').value.trim();
-  const name   = document.getElementById('rf-name').value.trim();
-  const amtRaw = document.getElementById('rf-amount').value.trim();
-  const amount = amtRaw!==''?parseInt(amtRaw,10):null;
-  const memo   = document.getElementById('rf-memo').value.trim();
-  const errEl  = document.getElementById('reward-form-error');
+  const date=document.getElementById('rf-date').value.trim();
+  const name=document.getElementById('rf-name').value.trim();
+  const amtRaw=document.getElementById('rf-amount').value.trim();
+  const amount=amtRaw!==''?parseInt(amtRaw,10):null;
+  const memo=document.getElementById('rf-memo').value.trim();
+  const errEl=document.getElementById('reward-form-error');
   if(!date){errEl.textContent='日付を入力してください';return;}
   if(!amount||amount<=0){errEl.textContent='金額を正しく入力してください';return;}
   errEl.textContent='';
-  if(editingRewardId){
-    const idx=rewards.findIndex(x=>x.id===editingRewardId);
-    if(idx>=0) rewards[idx]={...rewards[idx],date,name,amount,memo,status:selectedRewardStatus};
-  } else {
-    rewards.push({id:'rwd-'+Date.now(),date,name,amount,memo,status:selectedRewardStatus});
-  }
+  if(editingRewardId){ const idx=rewards.findIndex(x=>x.id===editingRewardId); if(idx>=0) rewards[idx]={...rewards[idx],date,name,amount,memo,status:selectedRewardStatus}; }
+  else { rewards.push({id:'rwd-'+Date.now(),date,name,amount,memo,status:selectedRewardStatus}); }
   saveData(); showScreen('main-screen'); switchTab('reward'); updateStats();
 }
 function deleteReward(id) {
   if(!confirm('この報酬記録を削除しますか？'))return;
-  rewards=rewards.filter(x=>x.id!==id);
-  saveData(); renderList(); updateStats();
+  rewards=rewards.filter(x=>x.id!==id); saveData(); renderList(); updateStats();
 }
 
 // ===== 前払い請求フォーム =====
@@ -1032,48 +1178,31 @@ function openAdvanceForm(id) {
   editingAdvanceId = id||null;
   document.getElementById('advance-form-title').textContent = id?'前払い請求を編集':'前払い請求を記録';
   document.getElementById('advance-form-error').textContent = '';
-  if(id){
-    const a=advances.find(x=>x.id===id);
-    if(a){
-      document.getElementById('af-date').value   = a.date||'';
-      document.getElementById('af-amount').value = a.amount||'';
-      document.getElementById('af-memo').value   = a.memo||'';
-    }
-  } else {
-    document.getElementById('af-date').value   = todayStr();
-    document.getElementById('af-amount').value = '';
-    document.getElementById('af-memo').value   = '';
-  }
+  if(id){ const a=advances.find(x=>x.id===id); if(a){ document.getElementById('af-date').value=a.date||''; document.getElementById('af-amount').value=a.amount||''; document.getElementById('af-memo').value=a.memo||''; } }
+  else { document.getElementById('af-date').value=todayStr(); document.getElementById('af-amount').value=''; document.getElementById('af-memo').value=''; }
   showScreen('advance-form-screen');
 }
 function closeAdvanceForm() { showScreen('main-screen'); renderList(); }
 function saveAdvance() {
-  const date   = document.getElementById('af-date').value.trim();
-  const amount = parseInt(document.getElementById('af-amount').value.trim(),10);
-  const memo   = document.getElementById('af-memo').value.trim();
-  const errEl  = document.getElementById('advance-form-error');
+  const date=document.getElementById('af-date').value.trim();
+  const amount=parseInt(document.getElementById('af-amount').value.trim(),10);
+  const memo=document.getElementById('af-memo').value.trim();
+  const errEl=document.getElementById('advance-form-error');
   if(!date){errEl.textContent='日付を入力してください';return;}
   if(!amount||amount<=0){errEl.textContent='金額を正しく入力してください';return;}
   errEl.textContent='';
-  if(editingAdvanceId){
-    const idx=advances.findIndex(x=>x.id===editingAdvanceId);
-    if(idx>=0) advances[idx]={...advances[idx],date,amount,memo};
-  } else {
-    advances.push({id:'adv-'+Date.now(),date,amount,memo});
-  }
+  if(editingAdvanceId){ const idx=advances.findIndex(x=>x.id===editingAdvanceId); if(idx>=0) advances[idx]={...advances[idx],date,amount,memo}; }
+  else { advances.push({id:'adv-'+Date.now(),date,amount,memo}); }
   saveData(); showScreen('main-screen'); switchTab('reward'); updateStats();
 }
 function deleteAdvance(id) {
   if(!confirm('この前払い請求記録を削除しますか？'))return;
-  advances=advances.filter(x=>x.id!==id);
-  saveData(); renderList(); updateStats();
+  advances=advances.filter(x=>x.id!==id); saveData(); renderList(); updateStats();
 }
 
-// ===== 削除・トグル =====
 function deleteVisit(id) {
   if(!confirm('この訪問予定を削除しますか？'))return;
-  visits=visits.filter(x=>x.id!==id);
-  saveData(); renderList(); updateStats();
+  visits=visits.filter(x=>x.id!==id); saveData(); renderList(); updateStats(); updateLimitBanner();
 }
 function toggleStatus(id) {
   const v=visits.find(x=>x.id===id); if(!v)return;
@@ -1082,7 +1211,6 @@ function toggleStatus(id) {
   if(document.getElementById('map-screen').style.display==='block') renderMapPins();
 }
 
-// ===== マップ =====
 function openMap(address) { if(!address)return; window.open('https://maps.google.com/?q='+encodeURIComponent(address),'_blank'); }
 function openMapFromInput() {
   const addr=document.getElementById('f-address').value.trim();
@@ -1092,33 +1220,28 @@ function openMapFromInput() {
 
 // ===== 設定 =====
 function openSettings() {
-  // 週起算日ボタン
-  [0,1,6].forEach(d => {
-    const btn=document.getElementById('wdbtn-'+d);
-    if(btn) btn.className='wd-btn'+(settings.weekStart===d?' active':'');
-  });
-  // ★ 締め日・支払日を入力欄にセット
+  [0,1,6].forEach(d => { const btn=document.getElementById('wdbtn-'+d); if(btn) btn.className='wd-btn'+(settings.weekStart===d?' active':''); });
   document.getElementById('s-closing-day').value = settings.closingDay;
   document.getElementById('s-pay-day').value     = settings.payDay;
   updateCyclePreview();
+  renderPlanStatusCard();
+  updateLockedButtonUI();
+  // ダッシュボード月ラベル
+  const [dy,dm] = dashMonth.split('-');
+  document.getElementById('dash-month-label').textContent = dy + '年 ' + parseInt(dm) + '月';
   showScreen('settings-screen');
 }
 function closeSettings() { showScreen('main-screen'); renderList(); updateStats(); }
 function setWeekStart(day) {
-  settings.weekStart = day;
-  saveData();
-  [0,1,6].forEach(d => {
-    const btn=document.getElementById('wdbtn-'+d);
-    if(btn) btn.className='wd-btn'+(settings.weekStart===d?' active':'');
-  });
+  settings.weekStart = day; saveData();
+  [0,1,6].forEach(d => { const btn=document.getElementById('wdbtn-'+d); if(btn) btn.className='wd-btn'+(settings.weekStart===d?' active':''); });
 }
 function clearAllData() {
   if(!confirm('すべてのデータを削除します。元に戻せません。よろしいですか？'))return;
-  visits=[]; advances=[]; rewards=[];
-  saveData(); closeSettings();
+  visits=[]; advances=[]; rewards=[]; saveData(); closeSettings();
 }
 
-// ===== 総合ダッシュボード =====
+// ===== ダッシュボード =====
 let dashMonth = (() => {
   const n = new Date();
   return n.getFullYear() + '-' + String(n.getMonth()+1).padStart(2,'0');
@@ -1145,12 +1268,7 @@ function makeTbl(headers, rows, emptyMsg) {
   tbl.style.cssText = 'width:100%;border-collapse:collapse;font-size:11px;min-width:320px;';
   const thead = document.createElement('thead');
   const trh = document.createElement('tr');
-  headers.forEach(h => {
-    const th = document.createElement('th');
-    th.textContent = h;
-    th.style.cssText = 'background:#333;color:#fff;padding:7px 8px;text-align:left;white-space:nowrap;font-weight:600;';
-    trh.appendChild(th);
-  });
+  headers.forEach(h => { const th=document.createElement('th'); th.textContent=h; th.style.cssText='background:#333;color:#fff;padding:7px 8px;text-align:left;white-space:nowrap;font-weight:600;'; trh.appendChild(th); });
   thead.appendChild(trh); tbl.appendChild(thead);
   const tbody = document.createElement('tbody');
   rows.forEach((row, i) => {
@@ -1172,96 +1290,38 @@ function makeTbl(headers, rows, emptyMsg) {
 function renderDashboard() {
   const wrap = document.getElementById('dashboard-wrap');
   wrap.innerHTML = '';
-
   const cyc = getCycleRange(dashMonth);
   const [y, m] = dashMonth.split('-');
-
-  // ---- 月別集計サマリー ----
   const secSummary = document.createElement('div');
   secSummary.style.cssText = 'background:#1a1a1a;color:#fff;border-radius:10px;padding:12px 14px;margin-bottom:14px;';
-
   const sumTitle = document.createElement('p');
   sumTitle.style.cssText = 'font-size:13px;font-weight:700;margin-bottom:8px;';
   sumTitle.textContent = '📊 ' + parseInt(m) + '月 集計サマリー（' + cyc.startDisp + ' 〜 ' + cyc.endDisp + '）';
   secSummary.appendChild(sumTitle);
-
-  const inCycleV = visits.filter(v => { const d=toDateStr(v.datetime); return d>=cyc.start&&d<=cyc.end; });
-  const inCycleR = rewards.filter(r => r.date>=cyc.start&&r.date<=cyc.end);
-  const inCycleA = advances.filter(a => (a.date||'').startsWith(dashMonth));
-
+  const inCycleV = visits.filter(v=>{const d=toDateStr(v.datetime);return d>=cyc.start&&d<=cyc.end;});
+  const inCycleR = rewards.filter(r=>r.date>=cyc.start&&r.date<=cyc.end);
+  const inCycleA = advances.filter(a=>(a.date||'').startsWith(dashMonth));
   const visitTotal    = inCycleV.length;
   const visitDone     = inCycleV.filter(v=>v.status===1).length;
-  const rewardPlanned = inCycleR.reduce((s,r)=>s+r.amount,0) + inCycleV.filter(v=>v.reward!=null).reduce((s,v)=>s+v.reward,0);
-  const rewardEarned  = inCycleR.filter(r=>r.status===1).reduce((s,r)=>s+r.amount,0) + inCycleV.filter(v=>v.status===1&&v.reward!=null).reduce((s,v)=>s+v.reward,0);
+  const rewardPlanned = inCycleR.reduce((s,r)=>s+r.amount,0)+inCycleV.filter(v=>v.reward!=null).reduce((s,v)=>s+v.reward,0);
+  const rewardEarned  = inCycleR.filter(r=>r.status===1).reduce((s,r)=>s+r.amount,0)+inCycleV.filter(v=>v.status===1&&v.reward!=null).reduce((s,v)=>s+v.reward,0);
   const advTotal      = inCycleA.reduce((s,a)=>s+a.amount,0);
   const balance       = rewardEarned - advTotal;
-
-  const summaryRows = [
-    ['訪問予定', visitTotal + '件（訪問済 ' + visitDone + '件）'],
-    ['予定報酬', fmtYen(rewardPlanned)],
-    ['確定報酬', fmtYen(rewardEarned)],
-    ['前払い請求', fmtYen(advTotal)],
-    ['差引残高（支払見込）', (balance<0?'▲':'')+fmtYen(Math.abs(balance))],
-    ['支払予定日', cyc.paydayDisp],
-  ];
-  summaryRows.forEach(([label, val]) => {
-    const row = document.createElement('div');
-    row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #333;';
-    const l = document.createElement('span'); l.textContent=label; l.style.cssText='font-size:12px;color:#ccc;';
-    const v = document.createElement('span'); v.textContent=val;   v.style.cssText='font-size:13px;font-weight:700;color:#fff;';
-    row.appendChild(l); row.appendChild(v);
-    secSummary.appendChild(row);
+  [['訪問予定',visitTotal+'件（訪問済 '+visitDone+'件）'],['予定報酬',fmtYen(rewardPlanned)],['確定報酬',fmtYen(rewardEarned)],['前払い請求',fmtYen(advTotal)],['差引残高（支払見込）',(balance<0?'▲':'')+fmtYen(Math.abs(balance))],['支払予定日',cyc.paydayDisp]].forEach(([label,val])=>{
+    const row=document.createElement('div'); row.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #333;';
+    const l=document.createElement('span'); l.textContent=label; l.style.cssText='font-size:12px;color:#ccc;';
+    const v=document.createElement('span'); v.textContent=val; v.style.cssText='font-size:13px;font-weight:700;color:#fff;';
+    row.appendChild(l); row.appendChild(v); secSummary.appendChild(row);
   });
   wrap.appendChild(secSummary);
-
-  // ---- 訪問予定明細 ----
-  const secLabel1 = document.createElement('p');
-  secLabel1.style.cssText = 'font-size:12px;font-weight:700;color:#555;margin:10px 0 6px;letter-spacing:.05em;';
-  secLabel1.textContent = '📋 訪問予定（' + parseInt(m) + '月サイクル ' + inCycleV.length + '件）';
-  wrap.appendChild(secLabel1);
-  wrap.appendChild(makeTbl(
-    ['日時','お客様名','ステータス','報酬'],
-    inCycleV.sort((a,b)=>(a.datetime||'').localeCompare(b.datetime||'')).map(v=>[
-      formatDT(v.datetime),
-      (v.customId?'['+v.customId+'] ':'')+(v.name||''),
-      v.status===1?'✓訪問済':'未訪問',
-      v.reward!=null?fmtYen(v.reward):'—'
-    ]),
-    'この期間の訪問予定はありません'
-  ));
-
-  // ---- 報酬明細 ----
-  const secLabel2 = document.createElement('p');
-  secLabel2.style.cssText = 'font-size:12px;font-weight:700;color:#555;margin:14px 0 6px;letter-spacing:.05em;';
-  secLabel2.textContent = '💰 報酬（' + inCycleR.length + '件）';
-  wrap.appendChild(secLabel2);
-  wrap.appendChild(makeTbl(
-    ['日付','件名','金額','状態'],
-    inCycleR.sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(r=>[
-      r.date||'—', r.name||'—', fmtYen(r.amount), r.status===1?'✓確定済':'未確定'
-    ]),
-    'この期間の報酬記録はありません'
-  ));
-
-  // ---- 前払い請求明細 ----
-  const secLabel3 = document.createElement('p');
-  secLabel3.style.cssText = 'font-size:12px;font-weight:700;color:#555;margin:14px 0 6px;letter-spacing:.05em;';
-  secLabel3.textContent = '💸 前払い請求（' + inCycleA.length + '件）';
-  wrap.appendChild(secLabel3);
-  wrap.appendChild(makeTbl(
-    ['日付','金額','メモ'],
-    inCycleA.sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(a=>[
-      a.date||'—', fmtYen(a.amount), a.memo||'—'
-    ]),
-    'この期間の前払い請求はありません'
-  ));
-
-  const hint = document.createElement('p');
-  hint.style.cssText = 'font-size:11px;color:#aaa;margin-top:10px;';
-  hint.textContent = '← 各テーブルは横にスクロールできます';
-  wrap.appendChild(hint);
-
-  wrap.scrollIntoView({ behavior:'smooth', block:'start' });
+  const secLabel1=document.createElement('p'); secLabel1.style.cssText='font-size:12px;font-weight:700;color:#555;margin:10px 0 6px;'; secLabel1.textContent='📋 訪問予定（'+parseInt(m)+'月サイクル '+inCycleV.length+'件）'; wrap.appendChild(secLabel1);
+  wrap.appendChild(makeTbl(['日時','お客様名','ステータス','報酬'],inCycleV.sort((a,b)=>(a.datetime||'').localeCompare(b.datetime||'')).map(v=>[formatDT(v.datetime),(v.customId?'['+v.customId+'] ':'')+(v.name||''),v.status===1?'✓訪問済':'未訪問',v.reward!=null?fmtYen(v.reward):'—']),'この期間の訪問予定はありません'));
+  const secLabel2=document.createElement('p'); secLabel2.style.cssText='font-size:12px;font-weight:700;color:#555;margin:14px 0 6px;'; secLabel2.textContent='💰 報酬（'+inCycleR.length+'件）'; wrap.appendChild(secLabel2);
+  wrap.appendChild(makeTbl(['日付','件名','金額','状態'],inCycleR.sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(r=>[r.date||'—',r.name||'—',fmtYen(r.amount),r.status===1?'✓確定済':'未確定']),'この期間の報酬記録はありません'));
+  const secLabel3=document.createElement('p'); secLabel3.style.cssText='font-size:12px;font-weight:700;color:#555;margin:14px 0 6px;'; secLabel3.textContent='💸 前払い請求（'+inCycleA.length+'件）'; wrap.appendChild(secLabel3);
+  wrap.appendChild(makeTbl(['日付','金額','メモ'],inCycleA.sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(a=>[a.date||'—',fmtYen(a.amount),a.memo||'—']),'この期間の前払い請求はありません'));
+  const hint=document.createElement('p'); hint.style.cssText='font-size:11px;color:#aaa;margin-top:10px;'; hint.textContent='← 各テーブルは横にスクロールできます'; wrap.appendChild(hint);
+  wrap.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 // ===== JSON バックアップ =====
@@ -1271,49 +1331,39 @@ function exportJSON() {
   const wrap = document.getElementById('json-export-wrap');
   wrap.innerHTML = '';
   const ta = document.createElement('textarea');
-  ta.value = jsonStr;
-  ta.readOnly = true;
+  ta.value = jsonStr; ta.readOnly = true;
   ta.style.cssText = 'width:100%;height:120px;font-size:11px;font-family:monospace;border:1px solid #ddd;border-radius:8px;padding:8px;background:#f9f9f8;color:#333;resize:none;display:block;margin-top:4px;';
   wrap.appendChild(ta);
   const copyBtn = document.createElement('button');
   copyBtn.textContent = '📋 全てコピーする';
   copyBtn.style.cssText = 'width:100%;margin-top:8px;padding:12px;font-size:14px;font-weight:600;background:#1a1a1a;color:#fff;border:none;border-radius:10px;cursor:pointer;';
   copyBtn.onclick = () => {
-    ta.select(); ta.setSelectionRange(0, 99999);
-    const done = () => { copyBtn.textContent='✅ コピーしました！'; copyBtn.style.background='#27ae60'; setTimeout(()=>{copyBtn.textContent='📋 全てコピーする';copyBtn.style.background='#1a1a1a';},2500); };
-    try { document.execCommand('copy'); done(); }
-    catch(e) { navigator.clipboard && navigator.clipboard.writeText(ta.value).then(done); }
+    ta.select(); ta.setSelectionRange(0,99999);
+    const done=()=>{copyBtn.textContent='✅ コピーしました！';copyBtn.style.background='#27ae60';setTimeout(()=>{copyBtn.textContent='📋 全てコピーする';copyBtn.style.background='#1a1a1a';},2500);};
+    try{document.execCommand('copy');done();}catch(e){navigator.clipboard&&navigator.clipboard.writeText(ta.value).then(done);}
   };
   wrap.appendChild(copyBtn);
-  const hint = document.createElement('p');
-  hint.style.cssText = 'font-size:11px;color:#aaa;margin-top:6px;';
-  hint.textContent = 'コピーしたJSONをメモ帳などに保存しておくと復元できます';
-  wrap.appendChild(hint);
-  wrap.scrollIntoView({ behavior:'smooth', block:'center' });
+  wrap.scrollIntoView({behavior:'smooth',block:'center'});
 }
-
-// ===== JSON 復元 =====
 function importJSON() {
   const statusEl = document.getElementById('json-import-status');
   const text = document.getElementById('json-import-area').value.trim();
   if (!text) { statusEl.style.color='#c0392b'; statusEl.textContent='JSONを貼り付けてください'; return; }
   try {
     const backup = JSON.parse(text);
-    if (!backup.visits && !backup.rewards && !backup.advances) {
-      statusEl.style.color='#c0392b'; statusEl.textContent='有効なバックアップデータではありません'; return;
-    }
-    if (!confirm('現在のデータにインポートします。同じIDのデータは上書きされます。よろしいですか？')) return;
+    if (!backup.visits && !backup.rewards && !backup.advances) { statusEl.style.color='#c0392b'; statusEl.textContent='有効なバックアップデータではありません'; return; }
+    if (!confirm('現在のデータにインポートします。よろしいですか？')) return;
     let added=0, updated=0;
-    const merge = (target, src) => { (src||[]).forEach(item => { const idx=target.findIndex(x=>x.id===item.id); if(idx>=0){target[idx]={...target[idx],...item};updated++;}else{target.push(item);added++;} }); };
-    merge(visits, backup.visits); merge(rewards, backup.rewards); merge(advances, backup.advances);
-    if (backup.settings) settings = { ...settings, ...backup.settings };
-    saveData(); renderList(); updateStats();
+    const merge=(target,src)=>{(src||[]).forEach(item=>{const idx=target.findIndex(x=>x.id===item.id);if(idx>=0){target[idx]={...target[idx],...item};updated++;}else{target.push(item);added++;}});};
+    merge(visits,backup.visits); merge(rewards,backup.rewards); merge(advances,backup.advances);
+    if(backup.settings) settings={...settings,...backup.settings};
+    saveData(); renderList(); updateStats(); updateLimitBanner();
     document.getElementById('json-import-area').value = '';
     statusEl.style.color='#27ae60';
     statusEl.textContent=`復元完了：新規 ${added}件 追加、${updated}件 更新`;
   } catch(e) {
     statusEl.style.color='#c0392b';
-    statusEl.textContent='JSONの読み込みに失敗しました。内容を確認してください';
+    statusEl.textContent='JSONの読み込みに失敗しました';
   }
 }
 
@@ -1322,419 +1372,162 @@ function exportCSV(type) {
   let rows = [], filename = '';
   const now = new Date();
   const stamp = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
-
-  if (type === 'visits') {
-    filename = `訪問予定_${stamp}.csv`;
+  if (type==='visits') {
+    filename=`訪問予定_${stamp}.csv`;
     rows.push(['管理ID','カスタムID','郵便番号','訪問日時','お客様名','住所','電話番号','メモ','報酬金額','ステータス(0=未訪問/1=訪問済)']);
-    visits.forEach(v => rows.push([
-      v.id||'', v.customId||'', v.zipcode||'', v.datetime||'',
-      v.name||'', v.address||'', v.tel||'', v.memo||'',
-      v.reward!=null?v.reward:'', v.status||0
-    ]));
-  } else if (type === 'rewards') {
-    filename = `報酬データ_${stamp}.csv`;
+    visits.forEach(v=>rows.push([v.id||'',v.customId||'',v.zipcode||'',v.datetime||'',v.name||'',v.address||'',v.tel||'',v.memo||'',v.reward!=null?v.reward:'',v.status||0]));
+  } else if (type==='rewards') {
+    filename=`報酬データ_${stamp}.csv`;
     rows.push(['管理ID','報酬発生日','お客様名・件名','報酬金額','ステータス(0=未確定/1=確定済)','メモ']);
-    rewards.forEach(r => rows.push([
-      r.id||'', r.date||'', r.name||'', r.amount||'', r.status!=null?r.status:1, r.memo||''
-    ]));
-  } else if (type === 'advances') {
-    filename = `前払い請求_${stamp}.csv`;
+    rewards.forEach(r=>rows.push([r.id||'',r.date||'',r.name||'',r.amount||'',r.status!=null?r.status:1,r.memo||'']));
+  } else if (type==='advances') {
+    filename=`前払い請求_${stamp}.csv`;
     rows.push(['管理ID','請求日','請求金額','メモ']);
-    advances.forEach(a => rows.push([
-      a.id||'', a.date||'', a.amount||'', a.memo||''
-    ]));
+    advances.forEach(a=>rows.push([a.id||'',a.date||'',a.amount||'',a.memo||'']));
   }
-
   if (rows.length <= 1) { alert('エクスポートするデータがありません'); return; }
-
-  const csvStr = rows.map(row =>
-    row.map(cell => {
-      const s = String(cell);
-      if (s.includes(',') || s.includes('"') || s.includes('\n')) {
-        return '"' + s.replace(/"/g, '""') + '"';
-      }
-      return s;
-    }).join(',')
-  ).join('\r\n');
-
-  const bom = '\uFEFF';
-  const csvContent = bom + csvStr;
-
-  // 既存表示をクリア
+  const csvStr = rows.map(row=>row.map(cell=>{const s=String(cell);if(s.includes(',')||s.includes('"')||s.includes('\n')){return '"'+s.replace(/"/g,'""')+'"';}return s;}).join(',')).join('\r\n');
   const wrap = document.getElementById('csv-dl-wrap');
   wrap.innerHTML = '';
-
-  // iPhone・GitHub Pages 環境を問わず確実に動く方式：
-  // テキストエリアにCSV内容を表示 → コピーボタンで全選択コピー
-  // ファイル名表示
-  const nameLabel = document.createElement('p');
-  nameLabel.style.cssText = 'font-size:13px;font-weight:700;color:#1a1a1a;margin-top:12px;margin-bottom:6px;';
-  nameLabel.textContent = '📄 ' + filename;
-  wrap.appendChild(nameLabel);
-
-  // テキストエリア
-  const ta = document.createElement('textarea');
-  ta.id = 'csv-dl-link';
-  ta.value = csvContent;
-  ta.readOnly = true;
-  ta.style.cssText = 'width:100%;height:160px;font-size:11px;font-family:monospace;border:1px solid #ddd;border-radius:8px;padding:8px;background:#f9f9f8;color:#333;resize:none;display:block;';
+  const nameLabel=document.createElement('p'); nameLabel.style.cssText='font-size:13px;font-weight:700;color:#1a1a1a;margin-top:12px;margin-bottom:6px;'; nameLabel.textContent='📄 '+filename; wrap.appendChild(nameLabel);
+  const ta=document.createElement('textarea'); ta.id='csv-dl-link'; ta.value='\uFEFF'+csvStr; ta.readOnly=true;
+  ta.style.cssText='width:100%;height:160px;font-size:11px;font-family:monospace;border:1px solid #ddd;border-radius:8px;padding:8px;background:#f9f9f8;color:#333;resize:none;display:block;';
   wrap.appendChild(ta);
-
-  // コピーボタン
-  const copyBtn = document.createElement('button');
-  copyBtn.textContent = '📋 全てコピーする';
-  copyBtn.style.cssText = 'width:100%;margin-top:8px;padding:12px;font-size:14px;font-weight:600;background:#1a1a1a;color:#fff;border:none;border-radius:10px;cursor:pointer;';
-  copyBtn.onclick = () => {
-    ta.select();
-    ta.setSelectionRange(0, 99999); // iOS対応
-    try {
-      document.execCommand('copy');
-      copyBtn.textContent = '✅ コピーしました！';
-      copyBtn.style.background = '#27ae60';
-      setTimeout(() => {
-        copyBtn.textContent = '📋 全てコピーする';
-        copyBtn.style.background = '#1a1a1a';
-      }, 2000);
-    } catch(e) {
-      navigator.clipboard.writeText(ta.value).then(() => {
-        copyBtn.textContent = '✅ コピーしました！';
-        copyBtn.style.background = '#27ae60';
-        setTimeout(() => {
-          copyBtn.textContent = '📋 全てコピーする';
-          copyBtn.style.background = '#1a1a1a';
-        }, 2000);
-      });
-    }
-  };
+  const copyBtn=document.createElement('button'); copyBtn.textContent='📋 全てコピーする';
+  copyBtn.style.cssText='width:100%;margin-top:8px;padding:12px;font-size:14px;font-weight:600;background:#1a1a1a;color:#fff;border:none;border-radius:10px;cursor:pointer;';
+  copyBtn.onclick=()=>{ta.select();ta.setSelectionRange(0,99999);try{document.execCommand('copy');copyBtn.textContent='✅ コピーしました！';copyBtn.style.background='#27ae60';setTimeout(()=>{copyBtn.textContent='📋 全てコピーする';copyBtn.style.background='#1a1a1a';},2000);}catch(e){navigator.clipboard.writeText(ta.value).then(()=>{copyBtn.textContent='✅ コピーしました！';copyBtn.style.background='#27ae60';setTimeout(()=>{copyBtn.textContent='📋 全てコピーする';copyBtn.style.background='#1a1a1a';},2000);});}};
   wrap.appendChild(copyBtn);
-
-  // 使い方ヒント
-  const hint = document.createElement('p');
-  hint.style.cssText = 'font-size:11px;color:#aaa;margin-top:8px;line-height:1.7;';
-  hint.innerHTML = '「全てコピーする」→ メモ帳・Numbers・Excelに貼り付け → ファイル名を <strong>' + filename + '</strong> にして保存';
-  wrap.appendChild(hint);
-
-  wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  wrap.scrollIntoView({behavior:'smooth',block:'center'});
 }
 
-// ===== CSV インポート トリガー =====
 function triggerImport() {
-  // iframeやSites埋め込み環境でも確実にファイル選択ダイアログを開く
   const el = document.getElementById('csv-import-file');
   el.value = '';
-  try {
-    el.click();
-  } catch(e) {
-    // フォールバック：一時的に body に追加してクリック
-    document.body.appendChild(el);
-    el.click();
-  }
+  try { el.click(); } catch(e) { document.body.appendChild(el); el.click(); }
 }
-
-// ===== CSV インポート =====
 function importCSV(input) {
-  const file = input.files && input.files[0];
-  if (!file) return;
-  input.value = '';
-  const statusEl = document.getElementById('csv-import-status');
-  statusEl.style.color = '#888';
-  statusEl.textContent = '読み込み中...';
-
-  const reader = new FileReader();
-  reader.onload = e => {
+  const file=input.files&&input.files[0]; if(!file)return;
+  input.value='';
+  const statusEl=document.getElementById('csv-import-status');
+  statusEl.style.color='#888'; statusEl.textContent='読み込み中...';
+  const reader=new FileReader();
+  reader.onload=e=>{
     try {
-      let text = e.target.result;
-      if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-      const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
-      if (lines.length < 2) { statusEl.style.color='#c0392b'; statusEl.textContent='データが見つかりませんでした'; return; }
-
-      const header = parseCSVLine(lines[0]);
-      const dataRows = lines.slice(1).map(l => parseCSVLine(l));
-
-      let type = '';
-      // 日本語ヘッダー・英語ヘッダー両対応
-      const isVisits   = header.includes('訪問日時') || (header.includes('datetime') && header.includes('address'));
-      const isRewards  = header.includes('報酬発生日') || (header.includes('amount') && header.includes('status') && header.includes('date') && !header.includes('datetime'));
-      const isAdvances = header.includes('請求日') || (header.includes('amount') && header.includes('date') && !header.includes('status') && !header.includes('datetime'));
-      if (isVisits) type = 'visits';
-      else if (isRewards) type = 'rewards';
-      else if (isAdvances) type = 'advances';
-
-      if (!type) { statusEl.style.color='#c0392b'; statusEl.textContent='対応していないCSV形式です'; return; }
-
-      // 日本語→英語キーのマッピング
-      const colMap = {
-        '管理ID':'id', 'カスタムID':'customId', '郵便番号':'zipcode',
-        '訪問日時':'datetime', 'お客様名':'name', '住所':'address',
-        '電話番号':'tel', 'メモ':'memo', '報酬金額':'reward',
-        'ステータス(0=未訪問/1=訪問済)':'status',
-        '報酬発生日':'date', 'お客様名・件名':'name',
-        'ステータス(0=未確定/1=確定済)':'status',
-        '請求日':'date', '請求金額':'amount',
-        // 英語キーはそのまま
-        'id':'id','customId':'customId','zipcode':'zipcode','datetime':'datetime',
-        'name':'name','address':'address','tel':'tel','memo':'memo',
-        'reward':'reward','status':'status','date':'date','amount':'amount'
-      };
-      const normalizedHeader = header.map(h => colMap[h.trim()] || h.trim());
-
-      const getVal = (row, col) => {
-        const idx = normalizedHeader.indexOf(col);
-        return idx >= 0 ? (row[idx] || '') : '';
-      };
-
-      let added = 0, updated = 0;
-
-      if (type === 'visits') {
-        dataRows.forEach(row => {
-          const id = getVal(row, 'id');
-          if (!id) return;
-          const obj = {
-            id, customId: getVal(row,'customId'), zipcode: getVal(row,'zipcode'),
-            datetime: getVal(row,'datetime'), name: getVal(row,'name'),
-            address: getVal(row,'address'), tel: getVal(row,'tel'),
-            memo: getVal(row,'memo'),
-            reward: getVal(row,'reward')!==''?parseInt(getVal(row,'reward')):null,
-            status: parseInt(getVal(row,'status'))||0,
-            photos: []
-          };
-          const idx = visits.findIndex(v=>v.id===id);
-          if (idx>=0) { visits[idx]={...visits[idx],...obj}; updated++; }
-          else { visits.push(obj); added++; }
-        });
-      } else if (type === 'rewards') {
-        dataRows.forEach(row => {
-          const id = getVal(row, 'id');
-          if (!id) return;
-          const obj = {
-            id, date: getVal(row,'date'), name: getVal(row,'name'),
-            amount: parseInt(getVal(row,'amount'))||0,
-            status: parseInt(getVal(row,'status'))!=null?parseInt(getVal(row,'status')):1,
-            memo: getVal(row,'memo')
-          };
-          const idx = rewards.findIndex(r=>r.id===id);
-          if (idx>=0) { rewards[idx]={...rewards[idx],...obj}; updated++; }
-          else { rewards.push(obj); added++; }
-        });
-      } else if (type === 'advances') {
-        dataRows.forEach(row => {
-          const id = getVal(row, 'id');
-          if (!id) return;
-          const obj = {
-            id, date: getVal(row,'date'),
-            amount: parseInt(getVal(row,'amount'))||0,
-            memo: getVal(row,'memo')
-          };
-          const idx = advances.findIndex(a=>a.id===id);
-          if (idx>=0) { advances[idx]={...advances[idx],...obj}; updated++; }
-          else { advances.push(obj); added++; }
-        });
+      let text=e.target.result;
+      if(text.charCodeAt(0)===0xFEFF)text=text.slice(1);
+      const lines=text.split(/\r?\n/).filter(l=>l.trim()!=='');
+      if(lines.length<2){statusEl.style.color='#c0392b';statusEl.textContent='データが見つかりませんでした';return;}
+      const header=parseCSVLine(lines[0]);
+      const dataRows=lines.slice(1).map(l=>parseCSVLine(l));
+      let type='';
+      const isVisits=header.includes('訪問日時')||(header.includes('datetime')&&header.includes('address'));
+      const isRewards=header.includes('報酬発生日')||(header.includes('amount')&&header.includes('status')&&header.includes('date')&&!header.includes('datetime'));
+      const isAdvances=header.includes('請求日')||(header.includes('amount')&&header.includes('date')&&!header.includes('status')&&!header.includes('datetime'));
+      if(isVisits)type='visits'; else if(isRewards)type='rewards'; else if(isAdvances)type='advances';
+      if(!type){statusEl.style.color='#c0392b';statusEl.textContent='対応していないCSV形式です';return;}
+      const colMap={'管理ID':'id','カスタムID':'customId','郵便番号':'zipcode','訪問日時':'datetime','お客様名':'name','住所':'address','電話番号':'tel','メモ':'memo','報酬金額':'reward','ステータス(0=未訪問/1=訪問済)':'status','報酬発生日':'date','お客様名・件名':'name','ステータス(0=未確定/1=確定済)':'status','請求日':'date','請求金額':'amount','id':'id','customId':'customId','zipcode':'zipcode','datetime':'datetime','name':'name','address':'address','tel':'tel','memo':'memo','reward':'reward','status':'status','date':'date','amount':'amount'};
+      const normalizedHeader=header.map(h=>colMap[h.trim()]||h.trim());
+      const getVal=(row,col)=>{const idx=normalizedHeader.indexOf(col);return idx>=0?(row[idx]||''):''};
+      let added=0,updated=0;
+      if(type==='visits'){
+        dataRows.forEach(row=>{const id=getVal(row,'id');if(!id)return;const obj={id,customId:getVal(row,'customId'),zipcode:getVal(row,'zipcode'),datetime:getVal(row,'datetime'),name:getVal(row,'name'),address:getVal(row,'address'),tel:getVal(row,'tel'),memo:getVal(row,'memo'),reward:getVal(row,'reward')!==''?parseInt(getVal(row,'reward')):null,status:parseInt(getVal(row,'status'))||0,photos:[]};const idx=visits.findIndex(v=>v.id===id);if(idx>=0){visits[idx]={...visits[idx],...obj};updated++;}else{visits.push(obj);added++;}});
+      } else if(type==='rewards'){
+        dataRows.forEach(row=>{const id=getVal(row,'id');if(!id)return;const obj={id,date:getVal(row,'date'),name:getVal(row,'name'),amount:parseInt(getVal(row,'amount'))||0,status:parseInt(getVal(row,'status'))!=null?parseInt(getVal(row,'status')):1,memo:getVal(row,'memo')};const idx=rewards.findIndex(r=>r.id===id);if(idx>=0){rewards[idx]={...rewards[idx],...obj};updated++;}else{rewards.push(obj);added++;}});
+      } else if(type==='advances'){
+        dataRows.forEach(row=>{const id=getVal(row,'id');if(!id)return;const obj={id,date:getVal(row,'date'),amount:parseInt(getVal(row,'amount'))||0,memo:getVal(row,'memo')};const idx=advances.findIndex(a=>a.id===id);if(idx>=0){advances[idx]={...advances[idx],...obj};updated++;}else{advances.push(obj);added++;}});
       }
-
-      saveData();
-      renderList();
-      updateStats();
-      statusEl.style.color = '#27ae60';
-      statusEl.textContent = `インポート完了：新規 ${added}件 追加、${updated}件 更新`;
-    } catch(err) {
-      statusEl.style.color = '#c0392b';
-      statusEl.textContent = '読み込みに失敗しました（ファイル形式を確認してください）';
-    }
+      saveData(); renderList(); updateStats(); updateLimitBanner();
+      statusEl.style.color='#27ae60';
+      statusEl.textContent=`インポート完了：新規 ${added}件 追加、${updated}件 更新`;
+    } catch(err) { statusEl.style.color='#c0392b'; statusEl.textContent='読み込みに失敗しました'; }
   };
-  reader.onerror = () => { statusEl.style.color='#c0392b'; statusEl.textContent='ファイルの読み込みに失敗しました'; };
-  // Shift_JIS判定（Excelで保存したCSVに対応）
-  const sniff = new FileReader();
-  sniff.onload = ev => {
-    const buf = new Uint8Array(ev.target.result);
-    const isUtf8Bom = buf[0]===0xEF && buf[1]===0xBB && buf[2]===0xBF;
-    const looksShiftJis = !isUtf8Bom && ((buf[0]>=0x82&&buf[0]<=0x9F)||(buf[0]>=0xE0&&buf[0]<=0xFC));
-    reader.readAsText(file, looksShiftJis ? 'Shift_JIS' : 'UTF-8');
-  };
+  reader.onerror=()=>{statusEl.style.color='#c0392b';statusEl.textContent='ファイルの読み込みに失敗しました';};
+  const sniff=new FileReader();
+  sniff.onload=ev=>{const buf=new Uint8Array(ev.target.result);const isUtf8Bom=buf[0]===0xEF&&buf[1]===0xBB&&buf[2]===0xBF;const looksShiftJis=!isUtf8Bom&&((buf[0]>=0x82&&buf[0]<=0x9F)||(buf[0]>=0xE0&&buf[0]<=0xFC));reader.readAsText(file,looksShiftJis?'Shift_JIS':'UTF-8');};
   sniff.readAsArrayBuffer(file.slice(0,4));
 }
-
 function parseCSVLine(line) {
-  const result = [];
-  let current = '', inQuote = false;
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (inQuote) {
-      if (ch === '"' && line[i+1] === '"') { current += '"'; i++; }
-      else if (ch === '"') { inQuote = false; }
-      else { current += ch; }
-    } else {
-      if (ch === '"') { inQuote = true; }
-      else if (ch === ',') { result.push(current); current = ''; }
-      else { current += ch; }
-    }
-  }
-  result.push(current);
-  return result;
+  const result=[];let current='',inQuote=false;
+  for(let i=0;i<line.length;i++){const ch=line[i];if(inQuote){if(ch==='"'&&line[i+1]==='"'){current+='"';i++;}else if(ch==='"'){inQuote=false;}else{current+=ch;}}else{if(ch==='"'){inQuote=true;}else if(ch===','){result.push(current);current='';}else{current+=ch;}}}
+  result.push(current);return result;
 }
 
 // ===== 検索 =====
 function toggleSearch() {
-  const area = document.getElementById('search-bar-area');
-  const isOpen = area.style.display !== 'none';
-  if (isOpen) {
-    area.style.display = 'none';
-    clearSearch();
-  } else {
-    area.style.display = 'block';
-    setTimeout(() => document.getElementById('search-input').focus(), 100);
-  }
+  const area=document.getElementById('search-bar-area');
+  const isOpen=area.style.display!=='none';
+  if(isOpen){area.style.display='none';clearSearch();}
+  else{area.style.display='block';setTimeout(()=>document.getElementById('search-input').focus(),100);}
 }
 function onSearchInput() {
-  searchQuery = document.getElementById('search-input').value.trim();
-  isSearchMode = searchQuery.length > 0;
-  document.getElementById('btn-search-clear').classList.toggle('show', isSearchMode);
+  searchQuery=document.getElementById('search-input').value.trim();
+  isSearchMode=searchQuery.length>0;
+  document.getElementById('btn-search-clear').classList.toggle('show',isSearchMode);
   renderList();
 }
 function clearSearch() {
-  searchQuery = '';
-  isSearchMode = false;
-  document.getElementById('search-input').value = '';
+  searchQuery='';isSearchMode=false;
+  document.getElementById('search-input').value='';
   document.getElementById('btn-search-clear').classList.remove('show');
   document.getElementById('search-result-bar').classList.remove('show');
   renderList();
 }
-function highlight(text, query) {
-  if (!query || !text) return esc(text);
-  const escaped = String(text||'');
-  const re = new RegExp('(' + query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
-  return escaped.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(re, '<mark class="search-hit">$1</mark>');
+function highlight(text,query) {
+  if(!query||!text)return esc(text);
+  const escaped=String(text||'');
+  const re=new RegExp('('+query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
+  return escaped.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(re,'<mark class="search-hit">$1</mark>');
 }
 
 // ===== リスト描画 =====
 function renderList() {
   const today=todayStr();
-  let fv=[...visits], fa=[], fr=[];
-
-  if (isSearchMode) {
-    const q = searchQuery.toLowerCase();
-    fv = visits.filter(v =>
-      (v.name    ||'').toLowerCase().includes(q) ||
-      (v.customId||'').toLowerCase().includes(q) ||
-      (v.address ||'').toLowerCase().includes(q) ||
-      (v.memo    ||'').toLowerCase().includes(q) ||
-      (v.tel     ||'').toLowerCase().includes(q)
-    );
-    fr = rewards.filter(r =>
-      (r.name||'').toLowerCase().includes(q) ||
-      (r.memo||'').toLowerCase().includes(q)
-    );
-    const resultBar = document.getElementById('search-result-bar');
-    const total = fv.length + fr.length;
-    resultBar.textContent = `「${searchQuery}」の検索結果：${total}件`;
-    resultBar.classList.toggle('show', true);
+  let fv=[...visits],fa=[],fr=[];
+  if(isSearchMode){
+    const q=searchQuery.toLowerCase();
+    fv=visits.filter(v=>(v.name||'').toLowerCase().includes(q)||(v.customId||'').toLowerCase().includes(q)||(v.address||'').toLowerCase().includes(q)||(v.memo||'').toLowerCase().includes(q)||(v.tel||'').toLowerCase().includes(q));
+    fr=rewards.filter(r=>(r.name||'').toLowerCase().includes(q)||(r.memo||'').toLowerCase().includes(q));
+    const resultBar=document.getElementById('search-result-bar');
+    resultBar.textContent=`「${searchQuery}」の検索結果：${fv.length+fr.length}件`;
+    resultBar.classList.toggle('show',true);
   } else {
     document.getElementById('search-result-bar').classList.remove('show');
   }
-
-  if (!isSearchMode) {
-    if(currentTab==='today'){
-      fv=visits.filter(v=>toDateStr(v.datetime)===today);
-    } else if(currentTab==='tomorrow'){
-      fv=visits.filter(v=>toDateStr(v.datetime)===offsetDay(1));
-    } else if(currentTab==='dayafter'){
-      fv=visits.filter(v=>toDateStr(v.datetime)===offsetDay(2));
-    } else if(currentTab==='month'){
-      fv=visits.filter(v=>(v.datetime||'').startsWith(currentMonth));
-    } else if(currentTab==='reward'){
+  if(!isSearchMode){
+    if(currentTab==='today'){fv=visits.filter(v=>toDateStr(v.datetime)===today);}
+    else if(currentTab==='tomorrow'){fv=visits.filter(v=>toDateStr(v.datetime)===offsetDay(1));}
+    else if(currentTab==='dayafter'){fv=visits.filter(v=>toDateStr(v.datetime)===offsetDay(2));}
+    else if(currentTab==='month'){fv=visits.filter(v=>(v.datetime||'').startsWith(currentMonth));}
+    else if(currentTab==='reward'){
       fv=[];
       const cyc=getCycleRange(currentMonth);
-      fr=rewards.filter(r=>r.date>=cyc.start && r.date<=cyc.end);
+      fr=rewards.filter(r=>r.date>=cyc.start&&r.date<=cyc.end);
       fa=advances.filter(a=>(a.date||'').startsWith(currentMonth));
-    } else {
-      fv=visits.filter(v=>v.status===1);
-    }
+    } else {fv=visits.filter(v=>v.status===1);}
   }
-
   fv.sort((a,b)=>(a.datetime||'').localeCompare(b.datetime||''));
   fr.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
   fa.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
-
   const list=document.getElementById('visit-list');
 
-  if(currentTab==='reward' && !isSearchMode){
-    if(fr.length===0&&fa.length===0){
-      list.innerHTML='<div class="empty-msg">この月の記録はありません</div>';
-      updateStats(); return;
-    }
+  if(currentTab==='reward'&&!isSearchMode){
+    if(fr.length===0&&fa.length===0){list.innerHTML='<div class="empty-msg">この月の記録はありません</div>';updateStats();return;}
     let html='';
     if(fr.length>0){
       html+=`<div class="section-head">報酬一覧</div>`;
-      html+=fr.map(r=>`
-        <div class="reward-card">
-          <div class="reward-card-top">
-            <div class="reward-card-left">
-              <div class="rc-tag">${r.status===1?'✓ 確定済':'⏳ 未確定'}</div>
-              ${r.name?`<div class="rc-name">${esc(r.name)}</div>`:''}
-              <div class="rc-date">📅 ${r.date||''}</div>
-              ${r.memo?`<div class="rc-memo">📝 ${esc(r.memo)}</div>`:''}
-            </div>
-            <div>
-              <div class="rc-amount">${fmtYen(r.amount)}</div>
-            </div>
-          </div>
-          <div class="reward-actions">
-            <button class="btn-edit" onclick="openRewardForm('${r.id}')">✏️ 編集</button>
-            <button class="btn-del"  onclick="deleteReward('${r.id}')">🗑 削除</button>
-          </div>
-        </div>`).join('');
+      html+=fr.map(r=>`<div class="reward-card"><div class="reward-card-top"><div class="reward-card-left"><div class="rc-tag">${r.status===1?'✓ 確定済':'⏳ 未確定'}</div>${r.name?`<div class="rc-name">${esc(r.name)}</div>`:''}<div class="rc-date">📅 ${r.date||''}</div>${r.memo?`<div class="rc-memo">📝 ${esc(r.memo)}</div>`:''}</div><div><div class="rc-amount">${fmtYen(r.amount)}</div></div></div><div class="reward-actions"><button class="btn-edit" onclick="openRewardForm('${r.id}')">✏️ 編集</button><button class="btn-del" onclick="deleteReward('${r.id}')">🗑 削除</button></div></div>`).join('');
     }
     if(fa.length>0){
       html+=`<div class="section-head">前払い請求一覧</div>`;
-      html+=fa.map(a=>`
-        <div class="advance-card">
-          <div class="advance-top">
-            <div>
-              <div class="ac-tag">💸 前払い請求</div>
-              <div class="ac-date">📅 ${a.date||''}</div>
-              ${a.memo?`<div class="ac-memo">📝 ${esc(a.memo)}</div>`:''}
-            </div>
-            <div class="ac-amount">${fmtYen(a.amount)}</div>
-          </div>
-          <div class="advance-actions">
-            <button class="btn-edit" onclick="openAdvanceForm('${a.id}')">✏️ 編集</button>
-            <button class="btn-del"  onclick="deleteAdvance('${a.id}')">🗑 削除</button>
-          </div>
-        </div>`).join('');
+      html+=fa.map(a=>`<div class="advance-card"><div class="advance-top"><div><div class="ac-tag">💸 前払い請求</div><div class="ac-date">📅 ${a.date||''}</div>${a.memo?`<div class="ac-memo">📝 ${esc(a.memo)}</div>`:''}</div><div class="ac-amount">${fmtYen(a.amount)}</div></div><div class="advance-actions"><button class="btn-edit" onclick="openAdvanceForm('${a.id}')">✏️ 編集</button><button class="btn-del" onclick="deleteAdvance('${a.id}')">🗑 削除</button></div></div>`).join('');
     }
-    list.innerHTML=html;
-    updateStats(); return;
+    list.innerHTML=html; updateStats(); return;
   }
 
-  if(fv.length===0){
-    list.innerHTML='<div class="empty-msg">予定がありません</div>';
-    updateStats(); return;
-  }
-
+  if(fv.length===0){list.innerHTML='<div class="empty-msg">予定がありません</div>';updateStats();return;}
   list.innerHTML=fv.map(v=>{
     const isV=v.status===1;
-    return `
-    <div class="visit-card ${isV?'visited':'unvisited'}">
-      <div class="visit-head">
-        <div>
-          <div class="visit-datetime">${formatDT(v.datetime)}</div>
-          <div class="visit-name">${isSearchMode?highlight(v.name,searchQuery):esc(v.name)}${v.customId?` <span style="font-size:11px;color:#aaa;font-weight:400;">ID: ${isSearchMode?highlight(v.customId,searchQuery):esc(v.customId)}</span>`:''}</div>
-        </div>
-        <button class="status-badge ${isV?'visited':'unvisited'}" onclick="toggleStatus('${v.id}')">
-          ${isV?'✓ 訪問済':'□ 未訪問'}
-        </button>
-      </div>
-      ${v.address?`<div class="visit-info">📍 ${esc(v.address)}</div>`:''}
-      ${v.tel?`<div class="visit-info">📞 ${esc(v.tel)}</div>`:''}
-      ${v.memo?`<div class="visit-memo">📝 ${esc(v.memo)}</div>`:''}
-      ${v.reward!=null?`<div class="visit-info" style="color:${isV?'#27ae60':'#aaa'};font-weight:700;">💰 ${isV?'確定':'予定'}：${fmtYen(v.reward)}</div>`:''}
-      ${v.photo?`<img class="visit-photo" src="${v.photo}" alt="写真" loading="lazy" />`:''}
-      <div class="visit-actions">
-        ${v.address?`<button class="btn-map" onclick="openMap('${esc(v.address)}')">🗺 マップ</button>`:''}
-        <button class="btn-edit" onclick="openForm('${v.id}')">✏️ 編集</button>
-        <button class="btn-del"  onclick="deleteVisit('${v.id}')">🗑 削除</button>
-      </div>
-    </div>`;
+    return `<div class="visit-card ${isV?'visited':'unvisited'}"><div class="visit-head"><div><div class="visit-datetime">${formatDT(v.datetime)}</div><div class="visit-name">${isSearchMode?highlight(v.name,searchQuery):esc(v.name)}${v.customId?` <span style="font-size:11px;color:#aaa;font-weight:400;">ID: ${isSearchMode?highlight(v.customId,searchQuery):esc(v.customId)}</span>`:''}</div></div><button class="status-badge ${isV?'visited':'unvisited'}" onclick="toggleStatus('${v.id}')">${isV?'✓ 訪問済':'□ 未訪問'}</button></div>${v.address?`<div class="visit-info">📍 ${esc(v.address)}</div>`:''}${v.tel?`<div class="visit-info">📞 ${esc(v.tel)}</div>`:''}${v.memo?`<div class="visit-memo">📝 ${esc(v.memo)}</div>`:''}${v.reward!=null?`<div class="visit-info" style="color:${isV?'#27ae60':'#aaa'};font-weight:700;">💰 ${isV?'確定':'予定'}：${fmtYen(v.reward)}</div>`:''}<div class="visit-actions">${v.address?`<button class="btn-map" onclick="openMap('${esc(v.address)}')">🗺 マップ</button>`:''}<button class="btn-edit" onclick="openForm('${v.id}')">✏️ 編集</button><button class="btn-del" onclick="deleteVisit('${v.id}')">🗑 削除</button></div></div>`;
   }).join('');
   updateStats();
 }
@@ -1743,158 +1536,78 @@ function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
 
 // ===== 郵便番号検索 =====
 function onZipInput(el) {
-  let v = el.value.replace(/[^0-9]/g, '');
-  if (v.length > 3) v = v.slice(0,3) + '-' + v.slice(3,7);
-  el.value = v;
-  if (v.replace('-','').length === 7) searchZip();
+  let v=el.value.replace(/[^0-9]/g,'');
+  if(v.length>3)v=v.slice(0,3)+'-'+v.slice(3,7);
+  el.value=v;
+  if(v.replace('-','').length===7)searchZip();
 }
-
 async function searchZip() {
-  const raw = document.getElementById('f-zip').value.replace(/[^0-9]/g,'');
-  const statusEl = document.getElementById('zip-status');
-  if (raw.length !== 7) {
-    statusEl.className = 'zip-status err';
-    statusEl.textContent = '7桁の郵便番号を入力してください';
-    return;
-  }
-  statusEl.className = 'zip-status loading';
-  statusEl.textContent = '検索中...';
+  const raw=document.getElementById('f-zip').value.replace(/[^0-9]/g,'');
+  const statusEl=document.getElementById('zip-status');
+  if(raw.length!==7){statusEl.className='zip-status err';statusEl.textContent='7桁の郵便番号を入力してください';return;}
+  statusEl.className='zip-status loading';statusEl.textContent='検索中...';
   try {
-    const res = await fetch(`https://zipcloud.ibsnet.co.jp/api/search?zipcode=${raw}`);
-    const data = await res.json();
-    if (data.status === 200 && data.results) {
-      const r = data.results[0];
-      const addr = (r.address1||'') + (r.address2||'') + (r.address3||'');
-      const current = document.getElementById('f-address').value;
-      if (!current.trim()) {
-        document.getElementById('f-address').value = addr;
-      } else if (!current.includes(r.address1||'')) {
-        document.getElementById('f-address').value = addr + ' ' + current;
-      }
-      statusEl.className = 'zip-status ok';
-      statusEl.textContent = `✓ ${addr}`;
-    } else {
-      statusEl.className = 'zip-status err';
-      statusEl.textContent = '該当する住所が見つかりませんでした';
-    }
-  } catch(e) {
-    statusEl.className = 'zip-status err';
-    statusEl.textContent = '検索に失敗しました（通信エラー）';
-  }
+    const res=await fetch(`https://zipcloud.ibsnet.co.jp/api/search?zipcode=${raw}`);
+    const data=await res.json();
+    if(data.status===200&&data.results){
+      const r=data.results[0];
+      const addr=(r.address1||'')+(r.address2||'')+(r.address3||'');
+      const current=document.getElementById('f-address').value;
+      if(!current.trim()){document.getElementById('f-address').value=addr;}
+      else if(!current.includes(r.address1||'')){document.getElementById('f-address').value=addr+' '+current;}
+      statusEl.className='zip-status ok';statusEl.textContent=`✓ ${addr}`;
+    } else {statusEl.className='zip-status err';statusEl.textContent='該当する住所が見つかりませんでした';}
+  } catch(e){statusEl.className='zip-status err';statusEl.textContent='検索に失敗しました（通信エラー）';}
 }
 
-// ===== マップ画面 =====
+// ===== マップ =====
 let mapFilter = 'all';
-
-function openMapScreen() {
-  renderMapPins();
-  showScreen('map-screen');
-}
-function closeMapScreen() {
-  showScreen('main-screen');
-  renderList();
-}
+function openMapScreen() { renderMapPins(); showScreen('map-screen'); }
+function closeMapScreen() { showScreen('main-screen'); renderList(); }
 function setMapFilter(f) {
-  mapFilter = f;
-  ['all','unvisited','today'].forEach(k => {
-    document.getElementById('mf-'+k).classList.toggle('active', k===f);
-  });
+  mapFilter=f;
+  ['all','unvisited','today'].forEach(k=>{document.getElementById('mf-'+k).classList.toggle('active',k===f);});
   renderMapPins();
 }
-
 function getMapVisits() {
-  const today = todayStr();
-  let base = visits.filter(v => v.address && v.address.trim());
-  if (mapFilter === 'unvisited') base = base.filter(v => v.status !== 1);
-  if (mapFilter === 'today')     base = base.filter(v => toDateStr(v.datetime) === today);
+  const today=todayStr();
+  let base=visits.filter(v=>v.address&&v.address.trim());
+  if(mapFilter==='unvisited')base=base.filter(v=>v.status!==1);
+  if(mapFilter==='today')base=base.filter(v=>toDateStr(v.datetime)===today);
   return base;
 }
-
 function renderMapPins() {
-  const list = document.getElementById('map-pin-list');
-  const pins = getMapVisits();
-  if (pins.length === 0) {
-    list.innerHTML = '<div class="map-empty">表示できる住所がありません<br><span style="font-size:12px;">（住所が登録されている予定のみ表示）</span></div>';
-    document.getElementById('map-multi-btn-wrap').style.display = 'none';
-    return;
-  }
-  document.getElementById('map-multi-btn-wrap').style.display = 'block';
-  list.innerHTML = pins.map(v => `
-    <div class="map-pin-item" id="pin-${v.id}">
-      <span class="map-pin-dot ${v.status===1?'visited':'unvisited'}"></span>
-      <div class="map-pin-info">
-        <div class="map-pin-name">${esc(v.name)}${v.customId?' <span style="font-size:10px;color:#aaa;">ID:'+esc(v.customId)+'</span>':''}</div>
-        <div class="map-pin-addr">📍 ${esc(v.address)}</div>
-        <div style="font-size:11px;color:#aaa;margin-top:2px;">${formatDT(v.datetime)}</div>
-      </div>
-      <button class="map-pin-open" onclick="openMap('${esc(v.address)}')">開く</button>
-    </div>
-  `).join('');
+  const list=document.getElementById('map-pin-list');
+  const pins=getMapVisits();
+  if(pins.length===0){list.innerHTML='<div class="map-empty">表示できる住所がありません<br><span style="font-size:12px;">（住所が登録されている予定のみ表示）</span></div>';document.getElementById('map-multi-btn-wrap').style.display='none';return;}
+  document.getElementById('map-multi-btn-wrap').style.display='block';
+  list.innerHTML=pins.map(v=>`<div class="map-pin-item" id="pin-${v.id}"><span class="map-pin-dot ${v.status===1?'visited':'unvisited'}"></span><div class="map-pin-info"><div class="map-pin-name">${esc(v.name)}${v.customId?' <span style="font-size:10px;color:#aaa;">ID:'+esc(v.customId)+'</span>':''}</div><div class="map-pin-addr">📍 ${esc(v.address)}</div><div style="font-size:11px;color:#aaa;margin-top:2px;">${formatDT(v.datetime)}</div></div><button class="map-pin-open" onclick="openMap('${esc(v.address)}')">開く</button></div>`).join('');
 }
-
 function openMultiMap() {
-  const pins = getMapVisits().filter(v => v.status !== 1);
-  if (pins.length === 0) { alert('未訪問の住所がありません'); return; }
-  const addrs = pins.slice(0, 10).map(v => encodeURIComponent(v.address));
+  const pins=getMapVisits().filter(v=>v.status!==1);
+  if(pins.length===0){alert('未訪問の住所がありません');return;}
+  const addrs=pins.slice(0,10).map(v=>encodeURIComponent(v.address));
   let url;
-  if (addrs.length === 1) {
-    url = `https://maps.google.com/?q=${addrs[0]}`;
-  } else {
-    const dest = addrs[addrs.length - 1];
-    const waypoints = addrs.slice(0, -1).join('/');
-    url = `https://www.google.com/maps/dir/${waypoints}/${dest}`;
-  }
-  window.open(url, '_blank');
-}
-
-function viewCardPhoto(src) {
-  const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:9999;display:flex;align-items:center;justify-content:center;';
-  overlay.onclick = () => document.body.removeChild(overlay);
-  const img = document.createElement('img');
-  img.src = src;
-  img.style.cssText = 'max-width:95vw;max-height:90vh;border-radius:8px;object-fit:contain;';
-  overlay.appendChild(img);
-  document.body.appendChild(overlay);
+  if(addrs.length===1){url=`https://maps.google.com/?q=${addrs[0]}`;}
+  else{const dest=addrs[addrs.length-1];const waypoints=addrs.slice(0,-1).join('/');url=`https://www.google.com/maps/dir/${waypoints}/${dest}`;}
+  window.open(url,'_blank');
 }
 
 // ===== 初期化 =====
 function init(){
   loadData();
   const now=new Date();
-  document.getElementById('header-date').textContent =
-    `${now.getMonth()+1}/${now.getDate()}(${['日','月','火','水','木','金','土'][now.getDay()]})`;
+  document.getElementById('header-date').textContent=`${now.getMonth()+1}/${now.getDate()}(${['日','月','火','水','木','金','土'][now.getDay()]})`;
   if(!window.navigator.standalone&&/iPhone|iPad|iPod/.test(navigator.userAgent))
     document.getElementById('pwa-hint').style.display='block';
   updateMonthLabel();
   updateStats();
   renderList();
+  updateLimitBanner();
+  updateLockedButtonUI();
 }
 init();
 </script>
-
-<!-- ===== マップ画面 ===== -->
-<div id="map-screen" class="map-screen">
-  <div class="map-header">
-    <button class="btn-back" onclick="closeMapScreen()" style="color:#ffffffaa;">← 戻る</button>
-    <span class="map-header-title">🗺️ 訪問マップ</span>
-    <span style="width:48px;"></span>
-  </div>
-  <div class="map-filter-bar">
-    <button class="map-filter-btn active" id="mf-all"       onclick="setMapFilter('all')">すべて</button>
-    <button class="map-filter-btn"        id="mf-unvisited" onclick="setMapFilter('unvisited')">未訪問のみ</button>
-    <button class="map-filter-btn"        id="mf-today"     onclick="setMapFilter('today')">今日のみ</button>
-  </div>
-  <div class="map-legend">
-    <span class="legend-item"><span class="legend-dot unvisited"></span>未訪問</span>
-    <span class="legend-item"><span class="legend-dot visited"></span>訪問済（参考表示）</span>
-    <span style="font-size:11px;color:#aaa;margin-left:auto;">訪問済みにするとピンが消えます</span>
-  </div>
-  <div class="map-pin-list" id="map-pin-list"></div>
-  <div id="map-multi-btn-wrap" style="max-width:480px;margin:0 auto;padding:0 16px 16px;">
-    <button class="btn-primary" style="background:#4285F4;" onclick="openMultiMap()">📍 まとめてマップで開く</button>
-  </div>
-</div>
 
 </body>
 </html>
