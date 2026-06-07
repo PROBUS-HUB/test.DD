@@ -546,6 +546,29 @@ input[type="datetime-local"], input[type="search"] {
       <p id="csv-import-status" style="font-size:12px;margin-top:8px;min-height:16px;"></p>
     </div>
 
+    <!-- データ確認テーブル -->
+    <div class="card">
+      <p class="card-label">データ確認（テーブル表示）</p>
+      <p style="font-size:12px;color:#aaa;margin-bottom:10px;">登録済みの全データを一覧で確認できます</p>
+      <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+        <button onclick="showDataTable('visits')"   style="flex:1;padding:9px 4px;font-size:12px;font-weight:600;background:#2980b9;color:#fff;border:none;border-radius:8px;cursor:pointer;">📋 訪問予定</button>
+        <button onclick="showDataTable('rewards')"  style="flex:1;padding:9px 4px;font-size:12px;font-weight:600;background:#27ae60;color:#fff;border:none;border-radius:8px;cursor:pointer;">💰 報酬</button>
+        <button onclick="showDataTable('advances')" style="flex:1;padding:9px 4px;font-size:12px;font-weight:600;background:#e67e22;color:#fff;border:none;border-radius:8px;cursor:pointer;">💸 前払い</button>
+      </div>
+      <div id="data-table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;"></div>
+    </div>
+
+    <!-- JSONバックアップ -->
+    <div class="card">
+      <p class="card-label">全データ バックアップ／復元（JSON）</p>
+      <p style="font-size:12px;color:#aaa;margin-bottom:10px;">訪問・報酬・前払い・設定を含む全データをまとめてバックアップ・復元できます</p>
+      <button class="btn-primary" style="background:#555;margin-bottom:8px;" onclick="exportJSON()">💾 全データをバックアップ（コピー）</button>
+      <div id="json-export-wrap"></div>
+      <textarea id="json-import-area" class="form-input" rows="4" placeholder="バックアップしたJSONをここに貼り付け..." style="margin-top:10px;font-size:12px;font-family:monospace;"></textarea>
+      <button class="btn-primary" style="background:#2980b9;margin-top:8px;margin-bottom:0;" onclick="importJSON()">📂 貼り付けたJSONから復元</button>
+      <p id="json-import-status" style="font-size:12px;margin-top:8px;min-height:16px;"></p>
+    </div>
+
     <div class="card" style="background:#f9f9f8;">
       <p class="card-label">データ管理</p>
       <button class="btn-primary" style="margin-bottom:0;background:#c0392b;" onclick="clearAllData()">すべてのデータを削除</button>
@@ -1082,6 +1105,125 @@ function clearAllData() {
   if(!confirm('すべてのデータを削除します。元に戻せません。よろしいですか？'))return;
   visits=[]; advances=[]; rewards=[];
   saveData(); closeSettings();
+}
+
+// ===== データ確認テーブル =====
+function showDataTable(type) {
+  const wrap = document.getElementById('data-table-wrap');
+  wrap.innerHTML = '';
+  let headers = [], rows = [], title = '';
+  if (type === 'visits') {
+    title = '訪問予定 ' + visits.length + '件';
+    headers = ['日時','お客様名','住所','ステータス','報酬'];
+    rows = visits.map(v => [
+      formatDT(v.datetime),
+      (v.customId ? '['+v.customId+'] ' : '') + (v.name||''),
+      v.address||'—', v.status===1 ? '✓訪問済' : '未訪問',
+      v.reward!=null ? fmtYen(v.reward) : '—'
+    ]);
+  } else if (type === 'rewards') {
+    title = '報酬 ' + rewards.length + '件';
+    headers = ['日付','件名','金額','状態','メモ'];
+    rows = rewards.map(r => [
+      r.date||'—', r.name||'—', fmtYen(r.amount),
+      r.status===1 ? '✓確定済' : '未確定', r.memo||'—'
+    ]);
+  } else if (type === 'advances') {
+    title = '前払い請求 ' + advances.length + '件';
+    headers = ['日付','金額','メモ'];
+    rows = advances.map(a => [a.date||'—', fmtYen(a.amount), a.memo||'—']);
+  }
+  if (rows.length === 0) {
+    wrap.innerHTML = '<p style="font-size:13px;color:#aaa;padding:12px 0;">データがありません</p>';
+    return;
+  }
+  const titleEl = document.createElement('p');
+  titleEl.style.cssText = 'font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:8px;';
+  titleEl.textContent = title;
+  wrap.appendChild(titleEl);
+  const table = document.createElement('table');
+  table.style.cssText = 'width:100%;border-collapse:collapse;font-size:12px;min-width:360px;';
+  const thead = document.createElement('thead');
+  const trh = document.createElement('tr');
+  headers.forEach(h => {
+    const th = document.createElement('th');
+    th.textContent = h;
+    th.style.cssText = 'background:#1a1a1a;color:#fff;padding:8px 10px;text-align:left;white-space:nowrap;font-weight:600;';
+    trh.appendChild(th);
+  });
+  thead.appendChild(trh);
+  table.appendChild(thead);
+  const tbody = document.createElement('tbody');
+  rows.forEach((row, i) => {
+    const tr = document.createElement('tr');
+    tr.style.background = i % 2 === 0 ? '#fff' : '#f9f9f8';
+    row.forEach(cell => {
+      const td = document.createElement('td');
+      td.textContent = cell;
+      td.style.cssText = 'padding:8px 10px;border-bottom:1px solid #f0f0f0;white-space:nowrap;color:#333;';
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+  const hint = document.createElement('p');
+  hint.style.cssText = 'font-size:11px;color:#aaa;margin-top:6px;';
+  hint.textContent = '← 横にスクロールできます';
+  wrap.appendChild(hint);
+}
+
+// ===== JSON バックアップ =====
+function exportJSON() {
+  const backup = { version:1, exportedAt:new Date().toISOString(), visits, rewards, advances, settings };
+  const jsonStr = JSON.stringify(backup, null, 2);
+  const wrap = document.getElementById('json-export-wrap');
+  wrap.innerHTML = '';
+  const ta = document.createElement('textarea');
+  ta.value = jsonStr;
+  ta.readOnly = true;
+  ta.style.cssText = 'width:100%;height:120px;font-size:11px;font-family:monospace;border:1px solid #ddd;border-radius:8px;padding:8px;background:#f9f9f8;color:#333;resize:none;display:block;margin-top:4px;';
+  wrap.appendChild(ta);
+  const copyBtn = document.createElement('button');
+  copyBtn.textContent = '📋 全てコピーする';
+  copyBtn.style.cssText = 'width:100%;margin-top:8px;padding:12px;font-size:14px;font-weight:600;background:#1a1a1a;color:#fff;border:none;border-radius:10px;cursor:pointer;';
+  copyBtn.onclick = () => {
+    ta.select(); ta.setSelectionRange(0, 99999);
+    const done = () => { copyBtn.textContent='✅ コピーしました！'; copyBtn.style.background='#27ae60'; setTimeout(()=>{copyBtn.textContent='📋 全てコピーする';copyBtn.style.background='#1a1a1a';},2500); };
+    try { document.execCommand('copy'); done(); }
+    catch(e) { navigator.clipboard && navigator.clipboard.writeText(ta.value).then(done); }
+  };
+  wrap.appendChild(copyBtn);
+  const hint = document.createElement('p');
+  hint.style.cssText = 'font-size:11px;color:#aaa;margin-top:6px;';
+  hint.textContent = 'コピーしたJSONをメモ帳などに保存しておくと復元できます';
+  wrap.appendChild(hint);
+  wrap.scrollIntoView({ behavior:'smooth', block:'center' });
+}
+
+// ===== JSON 復元 =====
+function importJSON() {
+  const statusEl = document.getElementById('json-import-status');
+  const text = document.getElementById('json-import-area').value.trim();
+  if (!text) { statusEl.style.color='#c0392b'; statusEl.textContent='JSONを貼り付けてください'; return; }
+  try {
+    const backup = JSON.parse(text);
+    if (!backup.visits && !backup.rewards && !backup.advances) {
+      statusEl.style.color='#c0392b'; statusEl.textContent='有効なバックアップデータではありません'; return;
+    }
+    if (!confirm('現在のデータにインポートします。同じIDのデータは上書きされます。よろしいですか？')) return;
+    let added=0, updated=0;
+    const merge = (target, src) => { (src||[]).forEach(item => { const idx=target.findIndex(x=>x.id===item.id); if(idx>=0){target[idx]={...target[idx],...item};updated++;}else{target.push(item);added++;} }); };
+    merge(visits, backup.visits); merge(rewards, backup.rewards); merge(advances, backup.advances);
+    if (backup.settings) settings = { ...settings, ...backup.settings };
+    saveData(); renderList(); updateStats();
+    document.getElementById('json-import-area').value = '';
+    statusEl.style.color='#27ae60';
+    statusEl.textContent=`復元完了：新規 ${added}件 追加、${updated}件 更新`;
+  } catch(e) {
+    statusEl.style.color='#c0392b';
+    statusEl.textContent='JSONの読み込みに失敗しました。内容を確認してください';
+  }
 }
 
 // ===== CSV エクスポート =====
