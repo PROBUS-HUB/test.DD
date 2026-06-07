@@ -494,7 +494,9 @@ textarea.form-input { resize:none; line-height:1.6; }
       <p style="font-size:12px;color:#aaa;margin-bottom:12px;">訪問予定・報酬・前払い請求のデータをCSVファイルとしてダウンロードします。Excelで開いて確認したり、バックアップとして保存できます。</p>
       <button class="btn-primary" style="background:#2980b9;margin-bottom:8px;" onclick="exportCSV('visits')">📋 訪問予定をエクスポート</button>
       <button class="btn-primary" style="background:#27ae60;margin-bottom:8px;" onclick="exportCSV('rewards')">💰 報酬データをエクスポート</button>
-      <button class="btn-primary" style="background:#e67e22;margin-bottom:0;" onclick="exportCSV('advances')">💸 前払い請求をエクスポート</button>
+      <button class="btn-primary" style="background:#e67e22;margin-bottom:8px;" onclick="exportCSV('advances')">💸 前払い請求をエクスポート</button>
+      <div id="csv-dl-wrap"></div>
+      <p style="font-size:11px;color:#aaa;margin-top:4px;">ボタンを押すとダウンロードリンクが表示されます。リンクを長押し（またはタップ）して保存してください。</p>
     </div>
 
     <!-- CSV インポート -->
@@ -502,7 +504,7 @@ textarea.form-input { resize:none; line-height:1.6; }
       <p class="card-label">CSVインポート</p>
       <p style="font-size:12px;color:#aaa;margin-bottom:8px;">エクスポートしたCSVファイルを読み込んでデータを復元します。同じIDのデータは上書きされます。新しいIDのデータは追加されます。</p>
       <input type="file" id="csv-import-file" accept=".csv" style="display:none;" onchange="importCSV(this)" />
-      <button class="btn-primary" style="background:#555;margin-bottom:0;" onclick="document.getElementById('csv-import-file').click()">📂 CSVファイルを選択してインポート</button>
+      <button class="btn-primary" style="background:#555;margin-bottom:0;" onclick="triggerImport()">📂 CSVファイルを選択してインポート</button>
       <p id="csv-import-status" style="font-size:12px;margin-top:8px;min-height:16px;"></p>
     </div>
 
@@ -1085,13 +1087,39 @@ function exportCSV(type) {
   ).join('\r\n');
 
   const bom = '\uFEFF';
-  const blob = new Blob([bom + csvStr], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
+  const csvContent = bom + csvStr;
+
+  // data URI をダウンロードリンクとして設定し、ユーザーにタップさせる
+  const encoded = encodeURIComponent(csvContent);
+  const dataUri = 'data:text/csv;charset=utf-8,' + encoded;
+
+  // 既存リンクがあれば削除
+  const existing = document.getElementById('csv-dl-link');
+  if (existing) existing.remove();
+
+  const wrap = document.getElementById('csv-dl-wrap');
   const a = document.createElement('a');
-  a.href = url;
+  a.id = 'csv-dl-link';
+  a.href = dataUri;
   a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
+  a.textContent = '⬇️ ' + filename + ' をダウンロード';
+  a.style.cssText = 'display:block;margin-top:12px;padding:12px 16px;background:#e8f5e9;border:1px solid #a5d6a7;border-radius:10px;color:#27ae60;font-size:14px;font-weight:600;text-align:center;text-decoration:none;';
+  wrap.appendChild(a);
+  wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// ===== CSV インポート トリガー =====
+function triggerImport() {
+  // iframeやSites埋め込み環境でも確実にファイル選択ダイアログを開く
+  const el = document.getElementById('csv-import-file');
+  el.value = '';
+  try {
+    el.click();
+  } catch(e) {
+    // フォールバック：一時的に body に追加してクリック
+    document.body.appendChild(el);
+    el.click();
+  }
 }
 
 // ===== CSV インポート =====
